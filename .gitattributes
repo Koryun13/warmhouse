@@ -1,0 +1,38 @@
+# Normalise line endings so the repository is identical on Windows and Linux.
+* text=auto
+
+# These are consumed inside Linux containers and must stay LF, otherwise the
+# shebang and the RUN instructions break with "\r: command not found".
+*.sh            text eol=lf
+Dockerfile      text eol=lf
+*.Dockerfile    text eol=lf
+*.yml           text eol=lf
+*.yaml          text eol=lf
+*.sql           text eol=lf
+
+# Source and configuration
+*.cs            text diff=csharp
+*.csproj        text
+*.props         text
+*.targets       text
+*.slnx          text
+*.sln           text eol=crlf
+*.json          text
+*.md            text
+*.puml          text
+*.xml           text
+
+# Binary assets: never diff or convert
+*.png           binary
+*.jpg           binary
+*.jpeg          binary
+*.gif           binary
+*.ico           binary
+*.pdf           binary
+*.zip           binary
+*.dll           binary
+*.exe           binary
+*.snk           binary
+
+# Keep generated API specs out of diff noise while still versioning them
+*.openapi.json  text linguist-generated=true
