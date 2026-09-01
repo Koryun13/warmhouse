@@ -1,0 +1,8 @@
+**/bin/
+**/obj/
+**/.vs/
+**/.vscode/
+**/*.user
+docs/
+deploy/postgres/
+README.md

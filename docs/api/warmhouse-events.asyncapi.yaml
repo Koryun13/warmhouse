@@ -1,0 +1,308 @@
+asyncapi: 3.0.0
+
+info:
+  title: Шина событий экосистемы «Тёплый дом»
+  version: 1.0.0
+  description: |
+    Асинхронные контракты обмена между микросервисами экосистемы умного дома.
+
+    Транспорт — RabbitMQ (AMQP 0-9-1), обмены типа fanout по типу сообщения:
+    издатель не знает своих подписчиков. Именно это позволяет подключать
+    новые типы устройств и новых потребителей, не изменяя существующие сервисы.
+
+    Формат полезной нагрузки — JSON в snake_case, как и в REST API.
+
+defaultContentType: application/json
+
+servers:
+  production:
+    host: rabbitmq:5672
+    protocol: amqp
+    description: Брокер сообщений экосистемы
+
+channels:
+  DeviceRegistered:
+    address: WarmHouse.Shared.Contracts.Events:DeviceRegistered
+    description: Пользователь подключил устройство в режиме самообслуживания.
+    messages:
+      DeviceRegistered:
+        $ref: '#/components/messages/DeviceRegistered'
+
+  DeviceStatusChanged:
+    address: WarmHouse.Shared.Contracts.Events:DeviceStatusChanged
+    description: Изменилась доступность устройства.
+    messages:
+      DeviceStatusChanged:
+        $ref: '#/components/messages/DeviceStatusChanged'
+
+  DeviceCommandRequested:
+    address: WarmHouse.Shared.Contracts.Events:DeviceCommandRequested
+    description: Доменный сервис или сценарий просит доставить команду устройству.
+    messages:
+      DeviceCommandRequested:
+        $ref: '#/components/messages/DeviceCommandRequested'
+
+  DeviceCommandCompleted:
+    address: WarmHouse.Shared.Contracts.Events:DeviceCommandCompleted
+    description: Результат доставки команды устройству.
+    messages:
+      DeviceCommandCompleted:
+        $ref: '#/components/messages/DeviceCommandCompleted'
+
+  TelemetryReported:
+    address: WarmHouse.Shared.Contracts.Events:TelemetryReported
+    description: Измерение с устройства. Заменяет синхронный опрос датчика из As-Is.
+    messages:
+      TelemetryReported:
+        $ref: '#/components/messages/TelemetryReported'
+
+  TelemetryThresholdBreached:
+    address: WarmHouse.Shared.Contracts.Events:TelemetryThresholdBreached
+    description: Измерение вышло за установленный пользователем порог.
+    messages:
+      TelemetryThresholdBreached:
+        $ref: '#/components/messages/TelemetryThresholdBreached'
+
+  NotificationRequested:
+    address: WarmHouse.Shared.Contracts.Events:NotificationRequested
+    description: Запрос на доставку уведомления пользователю.
+    messages:
+      NotificationRequested:
+        $ref: '#/components/messages/NotificationRequested'
+
+operations:
+  publishDeviceRegistered:
+    action: send
+    channel: { $ref: '#/channels/DeviceRegistered' }
+    summary: Публикует сервис «Управление устройствами».
+
+  consumeDeviceRegistered:
+    action: receive
+    channel: { $ref: '#/channels/DeviceRegistered' }
+    summary: |
+      Потребляют отопление, освещение, ворота, видеонаблюдение.
+      Каждый сервис берёт только подходящие ему по category/capabilities
+      устройства и игнорирует остальные.
+
+  publishTelemetryReported:
+    action: send
+    channel: { $ref: '#/channels/TelemetryReported' }
+    summary: Публикуют устройства через Ingest API или протокольный шлюз.
+
+  consumeTelemetryReported:
+    action: receive
+    channel: { $ref: '#/channels/TelemetryReported' }
+    summary: Потребляют телеметрия (хранение и пороги) и отопление (авторегулирование).
+
+  publishThresholdBreached:
+    action: send
+    channel: { $ref: '#/channels/TelemetryThresholdBreached' }
+    summary: Публикует сервис телеметрии.
+
+  consumeThresholdBreached:
+    action: receive
+    channel: { $ref: '#/channels/TelemetryThresholdBreached' }
+    summary: Потребляет сервис сценариев.
+
+  publishCommandRequested:
+    action: send
+    channel: { $ref: '#/channels/DeviceCommandRequested' }
+    summary: Публикуют отопление, освещение, ворота, видеонаблюдение и сценарии.
+
+  consumeCommandRequested:
+    action: receive
+    channel: { $ref: '#/channels/DeviceCommandRequested' }
+    summary: Потребляет сервис «Управление устройствами» и доставляет команду в шлюз.
+
+  publishCommandCompleted:
+    action: send
+    channel: { $ref: '#/channels/DeviceCommandCompleted' }
+    summary: Публикует сервис «Управление устройствами».
+
+  consumeCommandCompleted:
+    action: receive
+    channel: { $ref: '#/channels/DeviceCommandCompleted' }
+    summary: Потребляет сервис ворот — переводит створку из переходного состояния в конечное.
+
+  publishNotificationRequested:
+    action: send
+    channel: { $ref: '#/channels/NotificationRequested' }
+    summary: Публикует сервис сценариев.
+
+  consumeNotificationRequested:
+    action: receive
+    channel: { $ref: '#/channels/NotificationRequested' }
+    summary: Потребляет сервис уведомлений.
+
+components:
+  schemas:
+    EventEnvelope:
+      type: object
+      required: [event_id, occurred_at]
+      properties:
+        event_id:
+          type: string
+          format: uuid
+          description: Идентификатор события, используется для идемпотентности.
+        occurred_at:
+          type: string
+          format: date-time
+
+  messages:
+    DeviceRegistered:
+      name: DeviceRegistered
+      title: Устройство зарегистрировано
+      payload:
+        allOf:
+          - $ref: '#/components/schemas/EventEnvelope'
+          - type: object
+            required: [device_id, house_id, owner_id, device_type_code, category, serial_number, capabilities, protocol]
+            properties:
+              device_id: { type: string, format: uuid }
+              house_id: { type: string, format: uuid }
+              owner_id: { type: string, format: uuid }
+              device_type_code: { type: string, example: thermostat.warmhouse.v1 }
+              category:
+                type: string
+                enum: [unknown, heating, lighting, gate, camera, sensor]
+              serial_number: { type: string, example: TH-0001 }
+              capabilities:
+                type: array
+                items: { type: string }
+                example: [heating.setpoint, heating.mode, telemetry.temperature]
+              protocol:
+                type: string
+                enum: [http, mqtt, zigbee, z_wave, modbus]
+      examples:
+        - name: Термостат подключён
+          payload:
+            event_id: 01a05e08-0a92-7efa-826d-28a41f3c76e7
+            occurred_at: '2026-09-01T17:33:00.4340197+00:00'
+            device_id: 01a05e08-0a92-7efa-826d-28a41f3c76e7
+            house_id: 01a05e08-08c7-726e-b632-2e65f4c81b7d
+            owner_id: 01a05e08-0718-7893-96dd-4e579251da3b
+            device_type_code: thermostat.warmhouse.v1
+            category: heating
+            serial_number: TH-0001
+            capabilities: [heating.setpoint, heating.mode, telemetry.temperature]
+            protocol: mqtt
+
+    DeviceStatusChanged:
+      name: DeviceStatusChanged
+      title: Изменилось состояние устройства
+      payload:
+        allOf:
+          - $ref: '#/components/schemas/EventEnvelope'
+          - type: object
+            required: [device_id, previous_status, current_status]
+            properties:
+              device_id: { type: string, format: uuid }
+              previous_status:
+                type: string
+                enum: [unknown, offline, online, faulted, maintenance]
+              current_status:
+                type: string
+                enum: [unknown, offline, online, faulted, maintenance]
+              reason: { type: string, nullable: true }
+
+    DeviceCommandRequested:
+      name: DeviceCommandRequested
+      title: Запрошена команда устройству
+      payload:
+        allOf:
+          - $ref: '#/components/schemas/EventEnvelope'
+          - type: object
+            required: [command_id, device_id, capability, action, payload, requested_by, correlation_id]
+            properties:
+              command_id: { type: string, format: uuid }
+              device_id: { type: string, format: uuid }
+              capability:
+                type: string
+                description: Возможность устройства, а не модель прибора.
+                example: heating.setpoint
+              action: { type: string, example: set }
+              payload:
+                type: object
+                additionalProperties: { type: string }
+                example: { target: '21.0' }
+              requested_by: { type: string, format: uuid }
+              correlation_id: { type: string, format: uuid }
+      examples:
+        - name: Установить целевую температуру
+          payload:
+            event_id: 01a05e09-1111-7000-8000-000000000001
+            occurred_at: '2026-09-01T17:34:46.000+00:00'
+            command_id: 01a05e09-1111-7000-8000-000000000002
+            device_id: 01a05e08-0a92-7efa-826d-28a41f3c76e7
+            capability: heating.setpoint
+            action: set
+            payload: { target: '21.0' }
+            requested_by: 01a05e08-0718-7893-96dd-4e579251da3b
+            correlation_id: 01a05e09-1111-7000-8000-000000000003
+
+    DeviceCommandCompleted:
+      name: DeviceCommandCompleted
+      title: Команда выполнена или отклонена
+      payload:
+        allOf:
+          - $ref: '#/components/schemas/EventEnvelope'
+          - type: object
+            required: [command_id, device_id, status, correlation_id]
+            properties:
+              command_id: { type: string, format: uuid }
+              device_id: { type: string, format: uuid }
+              status:
+                type: string
+                enum: [pending, sent, acknowledged, failed, timed_out]
+              error: { type: string, nullable: true }
+              correlation_id: { type: string, format: uuid }
+
+    TelemetryReported:
+      name: TelemetryReported
+      title: Получено измерение
+      payload:
+        allOf:
+          - $ref: '#/components/schemas/EventEnvelope'
+          - type: object
+            required: [device_id, house_id, metric, value, unit, measured_at]
+            properties:
+              device_id: { type: string, format: uuid }
+              house_id: { type: string, format: uuid }
+              metric: { type: string, example: temperature }
+              value: { type: number, format: double, example: 15.5 }
+              unit: { type: string, example: '°C' }
+              measured_at: { type: string, format: date-time }
+
+    TelemetryThresholdBreached:
+      name: TelemetryThresholdBreached
+      title: Нарушен порог
+      payload:
+        allOf:
+          - $ref: '#/components/schemas/EventEnvelope'
+          - type: object
+            required: [device_id, house_id, metric, value, threshold, comparison]
+            properties:
+              device_id: { type: string, format: uuid }
+              house_id: { type: string, format: uuid }
+              metric: { type: string, example: temperature }
+              value: { type: number, format: double, example: 15.5 }
+              threshold: { type: number, format: double, example: 18.0 }
+              comparison:
+                type: string
+                enum: [gt, gte, lt, lte]
+
+    NotificationRequested:
+      name: NotificationRequested
+      title: Запрошено уведомление
+      payload:
+        allOf:
+          - $ref: '#/components/schemas/EventEnvelope'
+          - type: object
+            required: [recipient_id, channel, subject, body]
+            properties:
+              recipient_id: { type: string, format: uuid }
+              channel:
+                type: string
+                enum: [push, email, sms]
+              subject: { type: string }
+              body: { type: string }

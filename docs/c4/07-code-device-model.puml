@@ -1,0 +1,113 @@
+@startuml Code_DeviceModel
+title Диаграмма кода (C4, уровень 4) — модель расширяемости устройств\nмикросервис «Управление устройствами»
+
+skinparam classAttributeIconSize 0
+hide empty members
+
+package "WarmHouse.Devices.Domain" {
+
+    class DeviceType {
+        + Id : Guid
+        + Code : string
+        --
+        + Name : string
+        + Manufacturer : string
+        + Category : DeviceCategory
+        + Protocol : ConnectivityProtocol
+        + Capabilities : List<string>
+        + CreatedAt : DateTimeOffset
+    }
+
+    class Device {
+        + Id : Guid
+        --
+        + HouseId : Guid
+        + OwnerId : Guid
+        + DeviceTypeId : Guid
+        + SerialNumber : string
+        + Name : string
+        + Location : string?
+        + Status : DeviceStatus
+        + Firmware : string?
+        + LastSeenAt : DateTimeOffset?
+        + RegisteredAt : DateTimeOffset
+        + Settings : Dictionary<string,string>
+    }
+
+    class DeviceCommand {
+        + Id : Guid
+        --
+        + DeviceId : Guid
+        + Capability : string
+        + Action : string
+        + Payload : Dictionary<string,string>
+        + Status : CommandStatus
+        + Error : string?
+        + CorrelationId : Guid
+        + RequestedAt : DateTimeOffset
+        + CompletedAt : DateTimeOffset?
+    }
+
+    enum DeviceCategory {
+        Unknown
+        Heating
+        Lighting
+        Gate
+        Camera
+        Sensor
+    }
+
+    enum DeviceStatus {
+        Unknown
+        Offline
+        Online
+        Faulted
+        Maintenance
+    }
+
+    enum ConnectivityProtocol {
+        Http
+        Mqtt
+        Zigbee
+        ZWave
+        Modbus
+    }
+
+    enum CommandStatus {
+        Pending
+        Sent
+        Acknowledged
+        Failed
+        TimedOut
+    }
+}
+
+DeviceType "1" *-- "0..*" Device : определяет >
+Device "1" *-- "0..*" DeviceCommand : получает >
+
+DeviceType ..> DeviceCategory
+DeviceType ..> ConnectivityProtocol
+Device ..> DeviceStatus
+DeviceCommand ..> CommandStatus
+
+note right of DeviceType::Capabilities
+  Ключ расширяемости.
+
+  Команда адресуется не модели прибора,
+  а *возможности*: "heating.setpoint",
+  "lighting.brightness", "gate.open".
+
+  Новый прибор партнёра подключается
+  созданием записи DeviceType с нужным
+  набором capabilities — код сервисов
+  при этом не меняется.
+end note
+
+note bottom of DeviceCommand
+  Обобщённый контракт команды
+  (Capability, Action, Payload):
+  транспорт не зависит от того,
+  какие типы устройств существуют.
+end note
+
+@enduml

@@ -1,0 +1,63 @@
+@startuml C4_Components_Heating
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
+
+title Диаграмма компонентов (C4, уровень 3) — микросервис «Управление отоплением»\nвнутреннее устройство: чистая архитектура, слои разложены по папкам одного проекта
+
+Container(gateway, "API Gateway", "YARP", "")
+ContainerQueue(broker, "Шина событий", "RabbitMQ", "")
+ContainerDb(db, "heating_db", "PostgreSQL", "heating_zones")
+
+Container_Boundary(api, "Presentation — папка Api/") {
+    Component(endpoints, "HeatingEndpoints", "IEndpointModule", "GET /api/v1/heating/zones, PUT /{id}/setpoint, PUT /{id}/mode.")
+}
+
+Container_Boundary(application, "Application — папка Application/") {
+    Component(setSetpoint, "SetSetpointHandler", "Use case", "Проверяет диапазон 5–35 °C и публикует команду термостату.")
+    Component(setMode, "SetHeatingModeHandler", "Use case", "Переключает Off / Manual / Auto.")
+    Component(projectDevice, "ProjectDeviceHandler", "Use case", "DeviceRegistered: заводит зону, если категория Heating или заявлена heating.setpoint. Прочие устройства игнорируются.")
+    Component(applyTemp, "ApplyTemperatureHandler", "Use case", "TelemetryReported: передаёт измерение агрегату и превращает его решение в команду.")
+    Component(listZones, "ListHeatingZonesHandler / GetHeatingZoneHandler", "Use cases", "Чтение состояния зон.")
+}
+
+Container_Boundary(domain, "Domain — папка Domain/") {
+    Component(zone, "HeatingZone", "Aggregate root", "Целевая и текущая температура, режим, признак нагрева. Локальная проекция устройства.")
+    Component(decision, "ApplyMeasurement -> HeatingDecision", "Domain rule", "Правило автоподдержания с гистерезисом 0,5 °C. Живёт в агрегате, поэтому его нельзя обойти из сценария использования.")
+    Component(repoPort, "IHeatingZoneRepository", "Port", "Контракт хранения, объявленный доменом.")
+}
+
+Container_Boundary(infrastructure, "Infrastructure — папка Infrastructure/") {
+    Component(dbContext, "HeatingDbContext", "EF Core 10", "Конфигурация вынесена из сущности; уникальный индекс по device_id защищает проекцию от дублей.")
+    Component(repository, "HeatingZoneRepository", "EF Core", "Реализация доменного порта.")
+    Component(consumers, "DeviceRegisteredConsumer, TelemetryReportedConsumer, DeviceDecommissionedConsumer", "MassTransit", "Адаптеры брокера: разворачивают сообщение и делегируют сценарию использования.")
+}
+
+Rel(gateway, endpoints, "Проксирует /api/v1/heating", "HTTP/JSON")
+Rel(endpoints, setSetpoint, "Вызывает")
+Rel(endpoints, setMode, "Вызывает")
+Rel(endpoints, listZones, "Вызывает")
+
+Rel(broker, consumers, "DeviceRegistered, TelemetryReported", "AMQP")
+Rel(consumers, projectDevice, "Делегирует")
+Rel(consumers, applyTemp, "Делегирует")
+
+Rel(applyTemp, zone, "Передаёт измерение")
+Rel(zone, decision, "Возвращает решение")
+Rel(applyTemp, broker, "DeviceCommandRequested", "AMQP")
+Rel(setSetpoint, zone, "Меняет уставку")
+Rel(setSetpoint, broker, "DeviceCommandRequested", "AMQP")
+Rel(setMode, zone, "Меняет режим")
+
+Rel(setSetpoint, repoPort, "Через порт")
+Rel(applyTemp, repoPort, "Через порт")
+Rel(repository, repoPort, "Реализует")
+Rel(repository, dbContext, "")
+Rel(dbContext, db, "TCP 5432")
+
+note bottom of domain
+  Главное отличие от As-Is: сервис не опрашивает датчик.
+  Он получает поток измерений, а решение о нагреве
+  принимает сам агрегат — пользователь задаёт только цель.
+end note
+
+SHOW_LEGEND()
+@enduml

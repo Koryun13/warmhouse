@@ -1,0 +1,80 @@
+@startuml C4_Components_Devices
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
+
+title Диаграмма компонентов (C4, уровень 3) — микросервис «Управление устройствами»\nвнутреннее устройство: чистая архитектура, слои разложены по папкам одного проекта
+
+Container(gateway, "API Gateway", "YARP", "Единая точка входа")
+ContainerQueue(broker, "Шина событий", "RabbitMQ", "")
+ContainerDb(db, "devices_db", "PostgreSQL", "device_types, devices, device_commands")
+System_Ext(fleet, "Устройства и протокольные шлюзы", "MQTT / HTTP / Zigbee / Modbus")
+
+Container_Boundary(api, "Presentation — папка Api/") {
+    Component(deviceTypeEndpoints, "DeviceTypeEndpoints", "IEndpointModule", "GET/POST /api/v1/device-types. Только привязка HTTP к сценарию использования.")
+    Component(deviceEndpoints, "DeviceEndpoints", "IEndpointModule", "CRUD устройств, PATCH состояния, POST команд.")
+    Component(composition, "Program", "Composition root", "Единственное место, знающее обо всех слоях.")
+}
+
+Container_Boundary(application, "Application — папка Application/") {
+    Component(registerDevice, "RegisterDeviceHandler", "Use case", "Самоподключение устройства; публикует DeviceRegistered.")
+    Component(createType, "CreateDeviceTypeHandler", "Use case", "Регистрация ранее неизвестного типа устройства.")
+    Component(issueCommand, "IssueDeviceCommandHandler", "Use case", "Приём команды; проверяет capability до постановки в очередь.")
+    Component(deliverCommand, "DeliverDeviceCommandHandler", "Use case", "Доставка команды и публикация результата.")
+    Component(queriesPort, "IDeviceQueries", "Port (read side)", "Проекция в DTO одним запросом — без N+1.")
+    Component(gatewayPort, "IDeviceGateway", "Port", "Абстракция протокольного шлюза.")
+}
+
+Container_Boundary(domain, "Domain — папка Domain/") {
+    Component(deviceType, "DeviceType", "Aggregate root", "Код, категория, протокол, список capabilities. Точка расширения экосистемы.")
+    Component(device, "Device", "Aggregate root", "Состояние устройства и правила его смены; поднимает доменные события.")
+    Component(command, "DeviceCommand", "Aggregate root", "Обобщённая команда (capability, action, payload) и её статус.")
+    Component(repoPorts, "IDeviceRepository, IDeviceTypeRepository", "Ports", "Контракты хранения, объявленные доменом.")
+}
+
+Container_Boundary(infrastructure, "Infrastructure — папка Infrastructure/") {
+    Component(dbContext, "DevicesDbContext", "EF Core 10", "Конфигурации вынесены из сущностей: text[] для capabilities, jsonb для payload.")
+    Component(repositories, "Repositories", "EF Core", "Реализация доменных портов хранения.")
+    Component(deviceQueries, "DeviceQueries", "EF Core", "Реализация read-side порта.")
+    Component(consumer, "DeviceCommandRequestedConsumer", "MassTransit", "Адаптер брокера: разворачивает сообщение и делегирует.")
+    Component(deviceGateway, "SimulatedDeviceGateway", "Adapter", "Реализация IDeviceGateway; в проде — MQTT/Zigbee-шлюз.")
+}
+
+Rel(gateway, deviceTypeEndpoints, "HTTP/JSON")
+Rel(gateway, deviceEndpoints, "HTTP/JSON")
+
+Rel(deviceTypeEndpoints, createType, "Вызывает")
+Rel(deviceEndpoints, registerDevice, "Вызывает")
+Rel(deviceEndpoints, issueCommand, "Вызывает")
+
+Rel(registerDevice, device, "Создаёт агрегат")
+Rel(createType, deviceType, "Создаёт агрегат")
+Rel(issueCommand, command, "Создаёт агрегат")
+Rel(issueCommand, deviceType, "Проверяет capability")
+Rel(deliverCommand, gatewayPort, "Отправляет команду")
+
+Rel(registerDevice, repoPorts, "Через порты")
+Rel(deliverCommand, repoPorts, "Через порты")
+Rel(deviceEndpoints, queriesPort, "Чтение")
+
+Rel(broker, consumer, "DeviceCommandRequested", "AMQP")
+Rel(consumer, deliverCommand, "Делегирует")
+Rel(deviceGateway, fleet, "Протокол устройства", "MQTT / HTTP")
+
+Rel(repositories, repoPorts, "Реализует")
+Rel(deviceQueries, queriesPort, "Реализует")
+Rel(deviceGateway, gatewayPort, "Реализует")
+Rel(repositories, dbContext, "")
+Rel(deviceQueries, dbContext, "")
+Rel(dbContext, db, "TCP 5432")
+
+note right of domain
+  Направление зависимостей:
+  Api -> Infrastructure -> Application -> Domain
+
+  Домен не ссылается ни на EF Core, ни на брокер.
+  Инфраструктура реализует порты, объявленные
+  внутренними слоями. Для системы такого размера
+  граница слоёв — соглашение, а не отдельные сборки.
+end note
+
+SHOW_LEGEND()
+@enduml

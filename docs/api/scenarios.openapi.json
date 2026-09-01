@@ -1,0 +1,266 @@
+{
+  "openapi": "3.1.1",
+  "info": {
+    "title": "Automation Scenarios",
+    "version": "v1"
+  },
+  "servers": [
+    {
+      "url": "http://localhost:8075/"
+    }
+  ],
+  "paths": {
+    "/api/v1/scenarios": {
+      "get": {
+        "tags": [
+          "Scenarios"
+        ],
+        "summary": "Scenarios of a house",
+        "operationId": "ListScenarios",
+        "parameters": [
+          {
+            "name": "houseId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Scenarios"
+        ],
+        "summary": "Create an automation scenario",
+        "operationId": "CreateScenario",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateScenarioRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/scenarios/{id}": {
+      "get": {
+        "tags": [
+          "Scenarios"
+        ],
+        "summary": "Scenario details",
+        "operationId": "GetScenario",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Scenarios"
+        ],
+        "summary": "Delete a scenario",
+        "operationId": "DeleteScenario",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/scenarios/{id}/enabled": {
+      "post": {
+        "tags": [
+          "Scenarios"
+        ],
+        "summary": "Enable or disable a scenario",
+        "operationId": "SetScenarioEnabled",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "enabled",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "ActionKind": {
+        "enum": [
+          "device_command",
+          "notify"
+        ]
+      },
+      "CreateScenarioRequest": {
+        "required": [
+          "house_id",
+          "name",
+          "trigger_kind",
+          "trigger_metric",
+          "trigger_device_id",
+          "actions"
+        ],
+        "type": "object",
+        "properties": {
+          "house_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "trigger_kind": {
+            "$ref": "#/components/schemas/TriggerKind"
+          },
+          "trigger_metric": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "trigger_device_id": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "actions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ScenarioStepDto"
+            }
+          }
+        }
+      },
+      "ScenarioStepDto": {
+        "required": [
+          "kind",
+          "device_id",
+          "capability",
+          "action",
+          "recipient_id",
+          "channel",
+          "subject",
+          "body"
+        ],
+        "type": "object",
+        "properties": {
+          "kind": {
+            "$ref": "#/components/schemas/ActionKind"
+          },
+          "device_id": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "capability": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "action": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "recipient_id": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "channel": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "subject": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "body": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "TriggerKind": {
+        "enum": [
+          "telemetry_threshold",
+          "device_status"
+        ]
+      }
+    }
+  },
+  "tags": [
+    {
+      "name": "Scenarios"
+    }
+  ]
+}

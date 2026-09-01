@@ -1,0 +1,72 @@
+@startuml Code_Sequence_AutoHeating
+title Диаграмма кода (C4, уровень 4) — последовательность\n«измерение температуры → автоподдержание тепла → уведомление»
+
+skinparam responseMessageBelowArrow true
+
+actor "Датчик / шлюз" as sensor
+participant "Telemetry\nIngest API" as ingest
+queue "RabbitMQ" as mq
+participant "Telemetry\nTelemetryReportedConsumer" as tconsumer
+database "telemetry_db" as tdb
+participant "Heating\nTemperatureTelemetryConsumer" as hconsumer
+database "heating_db" as hdb
+participant "Scenarios\nThresholdBreachedConsumer" as sconsumer
+participant "Devices\nDeviceCommandRequestedConsumer" as dconsumer
+participant "Notifications\nNotificationRequestedConsumer" as nconsumer
+participant "Термостат" as device
+
+sensor -> ingest : POST /api/v1/telemetry\n{device_id, metric:"temperature", value:15.5}
+activate ingest
+ingest -> mq : publish TelemetryReported
+ingest --> sensor : 202 Accepted
+deactivate ingest
+
+note over mq
+  Одно событие — несколько независимых
+  подписчиков. Издатель не знает,
+  кто и сколько его обработает.
+end note
+
+mq -> tconsumer : TelemetryReported
+activate tconsumer
+tconsumer -> tdb : INSERT telemetry_points
+tconsumer -> tdb : SELECT threshold_rules\n(house, metric, device)
+tconsumer -> tconsumer : rule.IsBreached(15.5)\n15.5 < 18.0 → true
+tconsumer -> mq : publish TelemetryThresholdBreached
+deactivate tconsumer
+
+mq -> hconsumer : TelemetryReported
+activate hconsumer
+hconsumer -> hdb : SELECT heating_zones\nWHERE device_id = ...
+hconsumer -> hconsumer : Mode == Auto\n15.5 < 21.0 - 0.5 → нужен нагрев
+hconsumer -> hdb : UPDATE zone\nSET current_temperature, is_heating = true
+hconsumer -> mq : publish DeviceCommandRequested\n(heating.mode, "heat")
+deactivate hconsumer
+
+mq -> sconsumer : TelemetryThresholdBreached
+activate sconsumer
+sconsumer -> sconsumer : подобрать активные сценарии дома
+sconsumer -> mq : publish ScenarioTriggered
+sconsumer -> mq : publish NotificationRequested
+deactivate sconsumer
+
+mq -> dconsumer : DeviceCommandRequested
+activate dconsumer
+dconsumer -> dconsumer : устройство онлайн?\ncapability поддерживается?
+dconsumer -> device : команда по протоколу\n(MQTT / HTTP / Zigbee)
+device --> dconsumer : подтверждение
+dconsumer -> mq : publish DeviceCommandCompleted\n(Acknowledged)
+deactivate dconsumer
+
+mq -> nconsumer : NotificationRequested
+activate nconsumer
+nconsumer -> nconsumer : сохранить и отправить push
+deactivate nconsumer
+
+note over sensor, device
+  Ни один шаг не блокирует другой: отказ сервиса уведомлений
+  не мешает включить отопление. В As-Is монолите вся эта цепочка
+  была одним синхронным вызовом внутри одного процесса.
+end note
+
+@enduml

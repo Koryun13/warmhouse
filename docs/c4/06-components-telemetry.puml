@@ -1,0 +1,71 @@
+@startuml C4_Components_Telemetry
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
+
+title Диаграмма компонентов (C4, уровень 3) — микросервис «Телеметрия»\nвнутреннее устройство: чистая архитектура, слои разложены по папкам одного проекта
+
+Container(gateway, "API Gateway", "YARP", "")
+ContainerQueue(broker, "Шина событий", "RabbitMQ", "")
+ContainerDb(db, "telemetry_db", "PostgreSQL", "telemetry_points, threshold_rules")
+System_Ext(fleet, "Устройства и шлюзы", "")
+
+Container_Boundary(api, "Presentation — папка Api/") {
+    Component(telemetryEndpoints, "TelemetryEndpoints", "IEndpointModule", "POST /api/v1/telemetry, GET с фильтрами, GET /latest.")
+    Component(thresholdEndpoints, "ThresholdEndpoints", "IEndpointModule", "CRUD правил контроля порогов.")
+}
+
+Container_Boundary(application, "Application — папка Application/") {
+    Component(ingest, "IngestMeasurementHandler", "Use case", "Приём по HTTP от устройств без брокера. Публикует событие, а не пишет в БД: путь обработки един для всех источников.")
+    Component(record, "RecordMeasurementHandler", "Use case", "Сохраняет измерение и проверяет применимые правила.")
+    Component(query, "QueryMeasurementsHandler, GetLatestMeasurementHandler", "Use cases", "Чтение истории и последнего значения.")
+    Component(rules, "ListThresholdRulesHandler, CreateThresholdRuleHandler, DeleteThresholdRuleHandler", "Use cases", "Управление правилами.")
+    Component(queriesPort, "ITelemetryQueries", "Port (read side)", "Проекция в DTO поверх временного ряда.")
+}
+
+Container_Boundary(domain, "Domain — папка Domain/") {
+    Component(point, "TelemetryPoint", "Entity", "Измерение: время съёма и время приёма разделены — устройство может буферизовать.")
+    Component(rule, "ThresholdRule", "Aggregate root", "Оператор gt / gte / lt / lte; правило действует на устройство или на весь дом. IsBreachedBy — доменное правило.")
+    Component(repoPorts, "ITelemetryPointRepository, IThresholdRuleRepository", "Ports", "Контракты хранения.")
+}
+
+Container_Boundary(infrastructure, "Infrastructure — папка Infrastructure/") {
+    Component(dbContext, "TelemetryDbContext", "EF Core 10", "Индекс (device_id, metric, measured_at DESC) — под чтение «последние N».")
+    Component(repositories, "Repositories", "EF Core", "Реализация доменных портов.")
+    Component(telemetryQueries, "TelemetryQueries", "EF Core", "Реализация read-side порта; лимит применяется всегда.")
+    Component(consumer, "TelemetryReportedConsumer", "MassTransit", "Адаптер брокера.")
+}
+
+Rel(fleet, telemetryEndpoints, "Присылают измерения", "HTTPS")
+Rel(fleet, broker, "Присылают измерения через шлюз", "MQTT")
+Rel(gateway, telemetryEndpoints, "HTTP/JSON")
+Rel(gateway, thresholdEndpoints, "HTTP/JSON")
+
+Rel(telemetryEndpoints, ingest, "Вызывает")
+Rel(telemetryEndpoints, query, "Вызывает")
+Rel(thresholdEndpoints, rules, "Вызывает")
+
+Rel(ingest, broker, "TelemetryReported", "AMQP")
+Rel(broker, consumer, "TelemetryReported", "AMQP")
+Rel(consumer, record, "Делегирует")
+
+Rel(record, point, "Создаёт")
+Rel(record, rule, "Проверяет порог")
+Rel(record, broker, "TelemetryThresholdBreached", "AMQP")
+
+Rel(record, repoPorts, "Через порты")
+Rel(query, queriesPort, "Чтение")
+Rel(repositories, repoPorts, "Реализует")
+Rel(telemetryQueries, queriesPort, "Реализует")
+Rel(repositories, dbContext, "")
+Rel(telemetryQueries, dbContext, "")
+Rel(dbContext, db, "TCP 5432")
+
+note bottom of domain
+  Хранение истории — то, чего не было в As-Is:
+  монолит держал только последнее значение в
+  колонке sensors.value, поэтому ни графики,
+  ни правила «если температура ниже X» были
+  невозможны.
+end note
+
+SHOW_LEGEND()
+@enduml
