@@ -1,13 +1,11 @@
 # «Тёплый дом» — микросервисная экосистема умного дома (.NET 10)
 
-Решение проектной работы 1 спринта курса «Архитектура программного
-обеспечения» (Яндекс Практикум Казахстан). Кейс компании «Тёплый дом»:
-переход от монолита на Go к микросервисной SaaS-экосистеме.
+Переход от монолита на Go к микросервисной SaaS-экосистеме умного дома.
 
 Система написана **полностью заново** на .NET 10 / C#. Исходный монолит на Go
 использован только как материал для анализа As-Is: его кода в решении нет.
 
-**Ответы на задания 1–5 — в [`Project_template.md`](Project_template.md).**
+**Архитектурная документация — в [`ARCHITECTURE.md`](ARCHITECTURE.md).**
 
 ## Стек
 
@@ -97,7 +95,7 @@ dotnet build WarmHouse.slnx
 | Контейнер | Порт | Назначение | Документация API |
 |---|---|---|---|
 | `gateway` | **8000** | API Gateway — единая точка входа | http://localhost:8000/scalar |
-| `temperature-api` | **8081** | Имитатор партнёрского датчика (задание 5) | http://localhost:8081/scalar |
+| `temperature-api` | **8081** | Имитатор партнёрского датчика | http://localhost:8081/scalar |
 | `identity` | 8010 | Пользователи и дома | http://localhost:8010/scalar |
 | `devices` | 8020 | Управление устройствами | http://localhost:8020/scalar |
 | `heating` | 8030 | Управление отоплением | http://localhost:8030/scalar |
@@ -116,8 +114,8 @@ dotnet build WarmHouse.slnx
 ## Структура репозитория
 
 ```
-warmhouse-dotnet/
-├── Project_template.md              ответы на задания 1–5
+warmhouse/
+├── ARCHITECTURE.md                  архитектурная документация
 ├── WarmHouse.slnx                   решение (.NET 10)
 ├── Directory.Build.props            общие настройки сборки
 ├── Directory.Packages.props         централизованные версии пакетов
@@ -135,7 +133,7 @@ warmhouse-dotnet/
     │   ├── WarmHouse.Shared              Kernel/ Application/ Infrastructure/
     │   └── WarmHouse.Shared.Contracts    интеграционные события (общий контракт)
     ├── Gateway/WarmHouse.Gateway         YARP
-    ├── Simulators/WarmHouse.TemperatureApi   имитатор датчика (задание 5)
+    ├── Simulators/WarmHouse.TemperatureApi   имитатор датчика
     └── Services/                         9 микросервисов, по проекту на сервис
         ├── WarmHouse.Identity/  WarmHouse.Devices/  WarmHouse.Heating/
         ├── WarmHouse.Lighting/  WarmHouse.Gates/    WarmHouse.Monitoring/
