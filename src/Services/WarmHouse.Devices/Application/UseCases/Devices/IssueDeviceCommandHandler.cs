@@ -19,6 +19,7 @@ public sealed class IssueDeviceCommandHandler(
     IDeviceRepository devices,
     IDeviceTypeRepository deviceTypes,
     IDeviceCommandRepository commands,
+    ICurrentUser currentUser,
     IUnitOfWork unitOfWork,
     IIntegrationEventPublisher publisher,
     IDateTimeProvider clock)
@@ -29,7 +30,7 @@ public sealed class IssueDeviceCommandHandler(
         CancellationToken cancellationToken)
     {
         var device = await devices.GetByIdAsync(deviceId, cancellationToken);
-        if (device is null)
+        if (device is null || !currentUser.CanAccess(device.HouseId))
         {
             return DeviceErrors.DeviceNotFound;
         }
@@ -50,15 +51,15 @@ public sealed class IssueDeviceCommandHandler(
             request.Capability,
             request.Action,
             request.Payload,
-            request.RequestedBy,
+            currentUser.Id,
             clock.UtcNow);
 
         commands.Add(command);
-        await unitOfWork.SaveChangesAsync(cancellationToken);
 
         // Delivery is asynchronous: the caller receives 202 and polls the
         // command, rather than holding a connection open while a radio
-        // protocol does its work.
+        // protocol does its work. The event goes to the outbox and leaves it
+        // only if the command row is committed with it.
         await publisher.PublishAsync(
             new DeviceCommandRequested(
                 Guid.CreateVersion7(),
@@ -71,6 +72,8 @@ public sealed class IssueDeviceCommandHandler(
                 command.RequestedBy,
                 command.CorrelationId),
             cancellationToken);
+
+        await unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Map(command);
     }

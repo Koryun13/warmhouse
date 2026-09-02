@@ -39,10 +39,16 @@ public sealed class RegisterUserHandler(
     }
 }
 
-public sealed class GetUserHandler(IUserRepository users)
+/// <summary>Returns a profile. A user may read only their own.</summary>
+public sealed class GetUserHandler(IUserRepository users, ICurrentUser currentUser)
 {
     public async Task<Result<UserDto>> HandleAsync(Guid id, CancellationToken cancellationToken)
     {
+        if (id != currentUser.Id)
+        {
+            return AccessErrors.Forbidden;
+        }
+
         var user = await users.GetByIdAsync(id, cancellationToken);
         return user is null
             ? IdentityErrors.UserNotFound

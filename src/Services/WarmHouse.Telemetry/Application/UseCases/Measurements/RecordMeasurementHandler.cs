@@ -30,8 +30,6 @@ public sealed class RecordMeasurementHandler(
             message.MeasuredAt,
             clock.UtcNow));
 
-        await unitOfWork.SaveChangesAsync(cancellationToken);
-
         var applicable = await rules.GetApplicableAsync(
             message.HouseId, message.DeviceId, message.Metric, cancellationToken);
 
@@ -49,5 +47,8 @@ public sealed class RecordMeasurementHandler(
                     rule.OperatorCode),
                 cancellationToken);
         }
+
+        // One transaction: the stored point and the breaches it caused.
+        await unitOfWork.SaveChangesAsync(cancellationToken);
     }
 }

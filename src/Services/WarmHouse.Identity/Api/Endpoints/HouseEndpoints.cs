@@ -10,10 +10,10 @@ internal sealed class HouseEndpoints : IEndpointModule
     {
         var group = app.MapGroup("/api/v1/houses").WithTags("Houses");
 
-        group.MapGet("", async (ListHousesHandler handler, Guid? ownerId, CancellationToken ct) =>
-                (await handler.HandleAsync(ownerId, ct)).Match(Results.Ok))
+        group.MapGet("", async (ListHousesHandler handler, CancellationToken ct) =>
+                (await handler.HandleAsync(ct)).Match(Results.Ok))
             .WithName("ListHouses")
-            .WithSummary("Houses of a user");
+            .WithSummary("Houses the caller can reach");
 
         group.MapGet("/{id:guid}", async (Guid id, GetHouseHandler handler, CancellationToken ct) =>
                 (await handler.HandleAsync(id, ct)).Match(Results.Ok))

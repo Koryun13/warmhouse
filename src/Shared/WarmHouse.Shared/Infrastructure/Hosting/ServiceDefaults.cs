@@ -1,6 +1,7 @@
 using System.Reflection;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.Http;
@@ -72,18 +73,29 @@ public static class ServiceDefaults
         app.UseExceptionHandler();
         app.UseStatusCodePages();
 
-        app.MapOpenApi();
-        app.MapScalarApiReference(options => options.WithTitle(serviceTitle));
+        // Only for services that called AddServiceAuthentication: the gateway
+        // and the sensor simulator expose nothing that needs a token.
+        if (app.Services.GetService<IAuthenticationSchemeProvider>() is not null)
+        {
+            app.UseAuthentication();
+            app.UseAuthorization();
+        }
+
+        // The endpoints below describe or probe the service itself. Under the
+        // deny-by-default policy they have to opt out explicitly.
+        app.MapOpenApi().AllowAnonymous();
+        app.MapScalarApiReference(options => options.WithTitle(serviceTitle)).AllowAnonymous();
 
         // Liveness: the process is up. No dependency is probed.
         app.MapHealthChecks("/health", new HealthCheckOptions { Predicate = _ => false })
-            .WithTags("Health");
+            .WithTags("Health")
+            .AllowAnonymous();
 
         // Readiness: the dependencies this service needs are reachable.
         app.MapHealthChecks("/health/ready", new HealthCheckOptions
         {
             Predicate = check => check.Tags.Contains("ready"),
-        }).WithTags("Health");
+        }).WithTags("Health").AllowAnonymous();
 
         return app;
     }

@@ -10,7 +10,7 @@ internal sealed class ScenarioEndpoints : IEndpointModule
     {
         var group = app.MapGroup("/api/v1/scenarios").WithTags("Scenarios");
 
-        group.MapGet("", async (ListScenariosHandler handler, Guid? houseId, CancellationToken ct) =>
+        group.MapGet("", async (ListScenariosHandler handler, Guid houseId, CancellationToken ct) =>
                 (await handler.HandleAsync(houseId, ct)).Match(Results.Ok))
             .WithName("ListScenarios")
             .WithSummary("Scenarios of a house");

@@ -14,7 +14,7 @@ internal sealed class DeviceEndpoints : IEndpointModule
 
         group.MapGet("", async (
                 ListDevicesHandler handler,
-                Guid? houseId,
+                Guid houseId,
                 DeviceCategory? category,
                 CancellationToken ct) =>
             {

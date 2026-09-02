@@ -116,8 +116,6 @@ public sealed class DeliverDeviceCommandHandler(
             }
         }
 
-        await unitOfWork.SaveChangesAsync(cancellationToken);
-
         await publisher.PublishAsync(
             new DeviceCommandCompleted(
                 Guid.CreateVersion7(),
@@ -128,5 +126,7 @@ public sealed class DeliverDeviceCommandHandler(
                 error,
                 message.CorrelationId),
             cancellationToken);
+
+        await unitOfWork.SaveChangesAsync(cancellationToken);
     }
 }

@@ -43,19 +43,24 @@ public sealed class DeliverNotificationHandler(
     }
 }
 
-public sealed class ListNotificationsHandler(INotificationRepository notifications)
+/// <summary>
+/// Returns the caller's own notifications. The recipient comes from the token,
+/// so there is no query parameter with which to read somebody else's inbox.
+/// </summary>
+public sealed class ListNotificationsHandler(
+    INotificationRepository notifications,
+    ICurrentUser currentUser)
 {
     private const int DefaultLimit = 50;
     private const int MaxLimit = 200;
 
     public async Task<Result<IReadOnlyList<NotificationDto>>> HandleAsync(
-        Guid recipientId,
         bool unreadOnly,
         int? limit,
         CancellationToken cancellationToken)
     {
         var found = await notifications.ListForRecipientAsync(
-            recipientId, unreadOnly, Math.Clamp(limit ?? DefaultLimit, 1, MaxLimit), cancellationToken);
+            currentUser.Id, unreadOnly, Math.Clamp(limit ?? DefaultLimit, 1, MaxLimit), cancellationToken);
 
         return Result<IReadOnlyList<NotificationDto>>.Success([.. found.Select(Map)]);
     }
@@ -66,12 +71,13 @@ public sealed class ListNotificationsHandler(INotificationRepository notificatio
 
 public sealed class MarkNotificationReadHandler(
     INotificationRepository notifications,
+    ICurrentUser currentUser,
     IUnitOfWork unitOfWork)
 {
     public async Task<Result> HandleAsync(Guid id, CancellationToken cancellationToken)
     {
         var notification = await notifications.GetByIdAsync(id, cancellationToken);
-        if (notification is null)
+        if (notification is null || notification.RecipientId != currentUser.Id)
         {
             return Result.Failure(NotificationErrors.NotFound);
         }

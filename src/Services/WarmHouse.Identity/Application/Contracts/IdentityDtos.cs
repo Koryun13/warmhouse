@@ -10,7 +10,8 @@ public sealed record TokenRequest(string Email, string Password);
 
 public sealed record TokenDto(string AccessToken, string TokenType, DateTimeOffset ExpiresAt);
 
-public sealed record CreateHouseRequest(Guid OwnerId, string Name, string? Address, string? TimeZone);
+/// <summary>The owner is the authenticated caller, never a value from the body.</summary>
+public sealed record CreateHouseRequest(string Name, string? Address, string? TimeZone);
 
 public sealed record HouseDto(
     Guid Id,

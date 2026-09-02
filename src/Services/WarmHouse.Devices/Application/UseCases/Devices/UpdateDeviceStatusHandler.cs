@@ -14,6 +14,7 @@ namespace WarmHouse.Devices.Application.UseCases.Devices;
 /// </summary>
 public sealed class UpdateDeviceStatusHandler(
     IDeviceRepository devices,
+    ICurrentUser currentUser,
     IUnitOfWork unitOfWork,
     IIntegrationEventPublisher publisher,
     IDateTimeProvider clock)
@@ -24,13 +25,12 @@ public sealed class UpdateDeviceStatusHandler(
         CancellationToken cancellationToken)
     {
         var device = await devices.GetByIdAsync(deviceId, cancellationToken);
-        if (device is null)
+        if (device is null || !currentUser.CanAccess(device.HouseId))
         {
             return Result.Failure(DeviceErrors.DeviceNotFound);
         }
 
         device.ChangeStatus(request.Status, request.Reason, clock.UtcNow);
-        await unitOfWork.SaveChangesAsync(cancellationToken);
 
         foreach (var change in device.DomainEvents.OfType<DeviceStatusChangedDomainEvent>())
         {
@@ -46,6 +46,8 @@ public sealed class UpdateDeviceStatusHandler(
         }
 
         device.ClearDomainEvents();
+        await unitOfWork.SaveChangesAsync(cancellationToken);
+
         return Result.Success();
     }
 }

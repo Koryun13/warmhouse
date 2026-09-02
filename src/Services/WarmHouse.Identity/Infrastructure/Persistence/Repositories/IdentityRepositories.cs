@@ -24,17 +24,14 @@ internal sealed class HouseRepository(IdentityDbContext context) : IHouseReposit
     public Task<House?> GetByIdAsync(Guid id, CancellationToken cancellationToken)
         => context.Houses.Include(h => h.Members).FirstOrDefaultAsync(h => h.Id == id, cancellationToken);
 
-    public async Task<IReadOnlyList<House>> ListAsync(Guid? ownerId, CancellationToken cancellationToken)
-    {
-        var query = context.Houses.AsNoTracking();
-
-        if (ownerId is { } owner)
-        {
-            query = query.Where(h => h.OwnerId == owner);
-        }
-
-        return await query.OrderBy(h => h.Name).ToListAsync(cancellationToken);
-    }
+    public async Task<IReadOnlyList<House>> ListAccessibleAsync(
+        Guid userId,
+        CancellationToken cancellationToken)
+        => await context.Houses
+            .AsNoTracking()
+            .Where(h => context.HouseMembers.Any(m => m.HouseId == h.Id && m.UserId == userId))
+            .OrderBy(h => h.Name)
+            .ToListAsync(cancellationToken);
 
     public async Task<IReadOnlyList<Guid>> ListAccessibleHouseIdsAsync(
         Guid userId,

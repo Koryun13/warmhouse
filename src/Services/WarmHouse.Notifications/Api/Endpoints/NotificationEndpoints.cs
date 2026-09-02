@@ -11,13 +11,12 @@ internal sealed class NotificationEndpoints : IEndpointModule
 
         group.MapGet("", async (
                 ListNotificationsHandler handler,
-                Guid recipientId,
                 bool? unreadOnly,
                 int? limit,
                 CancellationToken ct) =>
-                (await handler.HandleAsync(recipientId, unreadOnly ?? false, limit, ct)).Match(Results.Ok))
+                (await handler.HandleAsync(unreadOnly ?? false, limit, ct)).Match(Results.Ok))
             .WithName("ListNotifications")
-            .WithSummary("Notifications of a user");
+            .WithSummary("Notifications of the authenticated user");
 
         group.MapPost("/{id:guid}/read", async (
                 Guid id, MarkNotificationReadHandler handler, CancellationToken ct) =>

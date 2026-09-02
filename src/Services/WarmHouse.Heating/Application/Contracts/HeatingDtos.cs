@@ -15,6 +15,7 @@ public sealed record HeatingZoneDto(
     bool IsHeating,
     DateTimeOffset UpdatedAt);
 
-public sealed record SetSetpointRequest(double TargetTemperature, Guid RequestedBy);
+// The requester is the authenticated caller, taken from the token.
+public sealed record SetSetpointRequest(double TargetTemperature);
 
-public sealed record SetModeRequest(HeatingMode Mode, Guid RequestedBy);
+public sealed record SetModeRequest(HeatingMode Mode);

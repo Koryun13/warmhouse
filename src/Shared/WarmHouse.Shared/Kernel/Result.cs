@@ -11,6 +11,7 @@ public enum ErrorType
     Conflict,
     Unprocessable,
     Unauthorized,
+    Forbidden,
     Unavailable,
 }
 
@@ -31,6 +32,10 @@ public sealed record Error(ErrorType Type, string Code, string Title, string? De
 
     public static Error Unauthorized(string code, string title, string? detail = null)
         => new(ErrorType.Unauthorized, code, title, detail);
+
+    /// <summary>The caller is known but must not touch this resource.</summary>
+    public static Error Forbidden(string code, string title, string? detail = null)
+        => new(ErrorType.Forbidden, code, title, detail);
 
     public static Error Unavailable(string code, string title, string? detail = null)
         => new(ErrorType.Unavailable, code, title, detail);

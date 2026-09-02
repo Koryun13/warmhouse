@@ -10,7 +10,7 @@ internal sealed class GateEndpoints : IEndpointModule
     {
         var group = app.MapGroup("/api/v1/gates").WithTags("Gates");
 
-        group.MapGet("", async (ListGatesHandler handler, Guid? houseId, CancellationToken ct) =>
+        group.MapGet("", async (ListGatesHandler handler, Guid houseId, CancellationToken ct) =>
                 (await handler.HandleAsync(houseId, ct)).Match(Results.Ok))
             .WithName("ListGates")
             .WithSummary("Gates of a house");
@@ -35,11 +35,10 @@ internal sealed class GateEndpoints : IEndpointModule
         string summary)
         => group.MapPost($"/{{id:guid}}/{segment}", async (
                 Guid id,
-                GateOperationRequest request,
                 OperateGateHandler handler,
                 CancellationToken ct) =>
             {
-                var result = await handler.HandleAsync(id, operation, request, ct);
+                var result = await handler.HandleAsync(id, operation, ct);
                 return result.Match(dto => Results.Accepted($"/api/v1/gates/{dto.Id}", dto));
             })
             .WithName(name)

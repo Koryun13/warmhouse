@@ -7,5 +7,9 @@ public interface ITelemetryQueries
 {
     Task<IReadOnlyList<MeasurementDto>> QueryAsync(TelemetryQuery query, CancellationToken cancellationToken);
 
-    Task<MeasurementDto?> GetLatestAsync(Guid deviceId, string metric, CancellationToken cancellationToken);
+    Task<MeasurementDto?> GetLatestAsync(
+        Guid houseId,
+        Guid deviceId,
+        string metric,
+        CancellationToken cancellationToken);
 }

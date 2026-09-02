@@ -1,6 +1,7 @@
 using System.Reflection;
 using Microsoft.EntityFrameworkCore;
 using WarmHouse.Notifications.Domain.Messages;
+using WarmHouse.Shared.Infrastructure.Persistence;
 
 namespace WarmHouse.Notifications.Infrastructure.Persistence;
 
@@ -10,5 +11,8 @@ public sealed class NotificationsDbContext(DbContextOptions<NotificationsDbConte
     public DbSet<Notification> Notifications => Set<Notification>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
-        => modelBuilder.ApplyConfigurationsFromAssembly(Assembly.GetExecutingAssembly());
+    {
+        modelBuilder.ApplyConfigurationsFromAssembly(Assembly.GetExecutingAssembly());
+        modelBuilder.AddMessagingOutbox();
+    }
 }

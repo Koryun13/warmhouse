@@ -10,6 +10,7 @@ namespace WarmHouse.Heating.Application.UseCases;
 /// <summary>Changes the target temperature of a zone and tells the thermostat.</summary>
 public sealed class SetSetpointHandler(
     IHeatingZoneRepository zones,
+    ICurrentUser currentUser,
     IUnitOfWork unitOfWork,
     IIntegrationEventPublisher publisher,
     IDateTimeProvider clock)
@@ -25,16 +26,19 @@ public sealed class SetSetpointHandler(
         }
 
         var zone = await zones.GetByIdAsync(zoneId, cancellationToken);
-        if (zone is null)
+        if (zone is null || !currentUser.CanAccess(zone.HouseId))
         {
             return HeatingErrors.ZoneNotFound;
         }
 
         zone.SetTarget(request.TargetTemperature, clock.UtcNow);
-        await unitOfWork.SaveChangesAsync(cancellationToken);
 
+        // Outbox: the command reaches the broker only if the new setpoint is
+        // committed, so the thermostat is never told something the zone forgot.
         await publisher.PublishAsync(
-            HeatingCommandFactory.Setpoint(zone, request.RequestedBy, clock.UtcNow), cancellationToken);
+            HeatingCommandFactory.Setpoint(zone, currentUser.Id, clock.UtcNow), cancellationToken);
+
+        await unitOfWork.SaveChangesAsync(cancellationToken);
 
         return HeatingCommandFactory.ToDto(zone);
     }
@@ -43,6 +47,7 @@ public sealed class SetSetpointHandler(
 /// <summary>Switches a zone between off, manual and automatic control.</summary>
 public sealed class SetHeatingModeHandler(
     IHeatingZoneRepository zones,
+    ICurrentUser currentUser,
     IUnitOfWork unitOfWork,
     IIntegrationEventPublisher publisher,
     IDateTimeProvider clock)
@@ -53,20 +58,21 @@ public sealed class SetHeatingModeHandler(
         CancellationToken cancellationToken)
     {
         var zone = await zones.GetByIdAsync(zoneId, cancellationToken);
-        if (zone is null)
+        if (zone is null || !currentUser.CanAccess(zone.HouseId))
         {
             return HeatingErrors.ZoneNotFound;
         }
 
         var mustStopHeating = zone.SwitchMode(request.Mode, clock.UtcNow);
-        await unitOfWork.SaveChangesAsync(cancellationToken);
 
         if (mustStopHeating)
         {
             await publisher.PublishAsync(
-                HeatingCommandFactory.Switch(zone.DeviceId, on: false, request.RequestedBy, clock.UtcNow),
+                HeatingCommandFactory.Switch(zone.DeviceId, on: false, currentUser.Id, clock.UtcNow),
                 cancellationToken);
         }
+
+        await unitOfWork.SaveChangesAsync(cancellationToken);
 
         return HeatingCommandFactory.ToDto(zone);
     }

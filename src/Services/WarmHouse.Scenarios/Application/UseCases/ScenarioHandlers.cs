@@ -7,23 +7,28 @@ using WarmHouse.Shared.Kernel;
 
 namespace WarmHouse.Scenarios.Application.UseCases;
 
-public sealed class ListScenariosHandler(IScenarioRepository scenarios)
+public sealed class ListScenariosHandler(IScenarioRepository scenarios, ICurrentUser currentUser)
 {
     public async Task<Result<IReadOnlyList<ScenarioDto>>> HandleAsync(
-        Guid? houseId,
+        Guid houseId,
         CancellationToken cancellationToken)
     {
+        if (!currentUser.CanAccess(houseId))
+        {
+            return AccessErrors.HouseForbidden(houseId);
+        }
+
         var found = await scenarios.ListAsync(houseId, cancellationToken);
         return Result<IReadOnlyList<ScenarioDto>>.Success([.. found.Select(ScenarioMapper.ToDto)]);
     }
 }
 
-public sealed class GetScenarioHandler(IScenarioRepository scenarios)
+public sealed class GetScenarioHandler(IScenarioRepository scenarios, ICurrentUser currentUser)
 {
     public async Task<Result<ScenarioDto>> HandleAsync(Guid id, CancellationToken cancellationToken)
     {
         var scenario = await scenarios.GetByIdAsync(id, cancellationToken);
-        return scenario is null
+        return scenario is null || !currentUser.CanAccess(scenario.HouseId)
             ? ScenarioErrors.NotFound
             : Result<ScenarioDto>.Success(ScenarioMapper.ToDto(scenario));
     }
@@ -31,6 +36,7 @@ public sealed class GetScenarioHandler(IScenarioRepository scenarios)
 
 public sealed class CreateScenarioHandler(
     IScenarioRepository scenarios,
+    ICurrentUser currentUser,
     IUnitOfWork unitOfWork,
     IDateTimeProvider clock)
 {
@@ -38,6 +44,11 @@ public sealed class CreateScenarioHandler(
         CreateScenarioRequest request,
         CancellationToken cancellationToken)
     {
+        if (!currentUser.CanAccess(request.HouseId))
+        {
+            return AccessErrors.HouseForbidden(request.HouseId);
+        }
+
         if (request.Actions.Count == 0)
         {
             return ScenarioErrors.NoSteps;
@@ -65,12 +76,15 @@ public sealed class CreateScenarioHandler(
     }
 }
 
-public sealed class SetScenarioEnabledHandler(IScenarioRepository scenarios, IUnitOfWork unitOfWork)
+public sealed class SetScenarioEnabledHandler(
+    IScenarioRepository scenarios,
+    ICurrentUser currentUser,
+    IUnitOfWork unitOfWork)
 {
     public async Task<Result> HandleAsync(Guid id, bool enabled, CancellationToken cancellationToken)
     {
         var scenario = await scenarios.GetByIdAsync(id, cancellationToken);
-        if (scenario is null)
+        if (scenario is null || !currentUser.CanAccess(scenario.HouseId))
         {
             return Result.Failure(ScenarioErrors.NotFound);
         }
@@ -81,12 +95,15 @@ public sealed class SetScenarioEnabledHandler(IScenarioRepository scenarios, IUn
     }
 }
 
-public sealed class DeleteScenarioHandler(IScenarioRepository scenarios, IUnitOfWork unitOfWork)
+public sealed class DeleteScenarioHandler(
+    IScenarioRepository scenarios,
+    ICurrentUser currentUser,
+    IUnitOfWork unitOfWork)
 {
     public async Task<Result> HandleAsync(Guid id, CancellationToken cancellationToken)
     {
         var scenario = await scenarios.GetByIdAsync(id, cancellationToken);
-        if (scenario is null)
+        if (scenario is null || !currentUser.CanAccess(scenario.HouseId))
         {
             return Result.Failure(ScenarioErrors.NotFound);
         }

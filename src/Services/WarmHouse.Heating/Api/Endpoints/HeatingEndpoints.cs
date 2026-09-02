@@ -12,7 +12,7 @@ internal sealed class HeatingEndpoints : IEndpointModule
 
         group.MapGet("", async (
                 ListHeatingZonesHandler handler,
-                Guid? houseId,
+                Guid houseId,
                 CancellationToken ct) =>
             {
                 var result = await handler.HandleAsync(houseId, ct);

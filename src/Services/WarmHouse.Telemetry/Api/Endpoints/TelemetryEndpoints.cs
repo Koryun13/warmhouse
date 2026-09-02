@@ -23,6 +23,7 @@ internal sealed class TelemetryEndpoints : IEndpointModule
 
         group.MapGet("", async (
                 QueryMeasurementsHandler handler,
+                Guid houseId,
                 Guid deviceId,
                 string? metric,
                 DateTimeOffset? from,
@@ -31,7 +32,7 @@ internal sealed class TelemetryEndpoints : IEndpointModule
                 CancellationToken ct) =>
             {
                 var result = await handler.HandleAsync(
-                    new TelemetryQuery(deviceId, metric, from, to, limit), ct);
+                    new TelemetryQuery(houseId, deviceId, metric, from, to, limit), ct);
                 return result.Match(Results.Ok);
             })
             .WithName("QueryTelemetry")
@@ -39,11 +40,12 @@ internal sealed class TelemetryEndpoints : IEndpointModule
 
         group.MapGet("/latest", async (
                 GetLatestMeasurementHandler handler,
+                Guid houseId,
                 Guid deviceId,
                 string metric,
                 CancellationToken ct) =>
             {
-                var result = await handler.HandleAsync(deviceId, metric, ct);
+                var result = await handler.HandleAsync(houseId, deviceId, metric, ct);
                 return result.Match(Results.Ok);
             })
             .WithName("GetLatestTelemetry")

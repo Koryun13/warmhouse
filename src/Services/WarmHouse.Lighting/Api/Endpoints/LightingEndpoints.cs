@@ -10,7 +10,7 @@ internal sealed class LightingEndpoints : IEndpointModule
     {
         var group = app.MapGroup("/api/v1/lighting/fixtures").WithTags("Lighting");
 
-        group.MapGet("", async (ListLightFixturesHandler handler, Guid? houseId, CancellationToken ct) =>
+        group.MapGet("", async (ListLightFixturesHandler handler, Guid houseId, CancellationToken ct) =>
                 (await handler.HandleAsync(houseId, ct)).Match(Results.Ok))
             .WithName("ListLightFixtures")
             .WithSummary("Light fixtures of a house");

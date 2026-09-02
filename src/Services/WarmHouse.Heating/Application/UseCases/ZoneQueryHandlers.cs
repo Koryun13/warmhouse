@@ -1,28 +1,34 @@
 using WarmHouse.Heating.Application.Contracts;
 using WarmHouse.Heating.Domain;
 using WarmHouse.Heating.Domain.Abstractions;
+using WarmHouse.Shared.Application.Abstractions;
 using WarmHouse.Shared.Kernel;
 
 namespace WarmHouse.Heating.Application.UseCases;
 
-public sealed class ListHeatingZonesHandler(IHeatingZoneRepository zones)
+public sealed class ListHeatingZonesHandler(IHeatingZoneRepository zones, ICurrentUser currentUser)
 {
     public async Task<Result<IReadOnlyList<HeatingZoneDto>>> HandleAsync(
-        Guid? houseId,
+        Guid houseId,
         CancellationToken cancellationToken)
     {
+        if (!currentUser.CanAccess(houseId))
+        {
+            return AccessErrors.HouseForbidden(houseId);
+        }
+
         var found = await zones.ListAsync(houseId, cancellationToken);
         return Result<IReadOnlyList<HeatingZoneDto>>.Success(
             [.. found.Select(HeatingCommandFactory.ToDto)]);
     }
 }
 
-public sealed class GetHeatingZoneHandler(IHeatingZoneRepository zones)
+public sealed class GetHeatingZoneHandler(IHeatingZoneRepository zones, ICurrentUser currentUser)
 {
     public async Task<Result<HeatingZoneDto>> HandleAsync(Guid id, CancellationToken cancellationToken)
     {
         var zone = await zones.GetByIdAsync(id, cancellationToken);
-        return zone is null
+        return zone is null || !currentUser.CanAccess(zone.HouseId)
             ? HeatingErrors.ZoneNotFound
             : Result<HeatingZoneDto>.Success(HeatingCommandFactory.ToDto(zone));
     }

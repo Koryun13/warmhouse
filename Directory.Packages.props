@@ -21,6 +21,8 @@
     <!-- MassTransit 8.x is Apache-2.0; 9.x switched to a commercial licence. -->
     <PackageVersion Include="MassTransit" Version="8.5.10" />
     <PackageVersion Include="MassTransit.RabbitMQ" Version="8.5.10" />
+    <!-- Transactional outbox and inbox over the service's own DbContext. -->
+    <PackageVersion Include="MassTransit.EntityFrameworkCore" Version="8.5.10" />
   </ItemGroup>
 
   <ItemGroup Label="Gateway">

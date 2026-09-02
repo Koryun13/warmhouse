@@ -11,6 +11,7 @@ public sealed record LightFixtureDto(
     bool IsDimmable,
     DateTimeOffset UpdatedAt);
 
-public sealed record SwitchLightRequest(bool On, Guid RequestedBy);
+// The requester is the authenticated caller, taken from the token.
+public sealed record SwitchLightRequest(bool On);
 
-public sealed record SetBrightnessRequest(int Brightness, Guid RequestedBy);
+public sealed record SetBrightnessRequest(int Brightness);

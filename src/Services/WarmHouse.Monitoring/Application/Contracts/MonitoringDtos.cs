@@ -14,4 +14,5 @@ public sealed record CameraDto(
 /// <summary>Short-lived permission to open a stream, instead of the raw address.</summary>
 public sealed record StreamTicketDto(Guid CameraId, string StreamUrl, DateTimeOffset ExpiresAt);
 
-public sealed record SetRecordingRequest(bool Enabled, Guid RequestedBy);
+// The requester is the authenticated caller, taken from the token.
+public sealed record SetRecordingRequest(bool Enabled);

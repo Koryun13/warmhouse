@@ -7,13 +7,18 @@ using WarmHouse.Shared.Kernel;
 
 namespace WarmHouse.Identity.Application.UseCases;
 
-public sealed class ListHousesHandler(IHouseRepository houses)
+/// <summary>
+/// Lists the houses the caller may reach.
+///
+/// This service owns the membership tables, so it authorises against them
+/// directly rather than against the claims in the token — a grant made after the
+/// token was issued is visible here immediately.
+/// </summary>
+public sealed class ListHousesHandler(IHouseRepository houses, ICurrentUser currentUser)
 {
-    public async Task<Result<IReadOnlyList<HouseDto>>> HandleAsync(
-        Guid? ownerId,
-        CancellationToken cancellationToken)
+    public async Task<Result<IReadOnlyList<HouseDto>>> HandleAsync(CancellationToken cancellationToken)
     {
-        var found = await houses.ListAsync(ownerId, cancellationToken);
+        var found = await houses.ListAccessibleAsync(currentUser.Id, cancellationToken);
         return Result<IReadOnlyList<HouseDto>>.Success([.. found.Select(Map)]);
     }
 
@@ -21,20 +26,26 @@ public sealed class ListHousesHandler(IHouseRepository houses)
         house.Id, house.OwnerId, house.Name, house.Address, house.TimeZone, house.CreatedAt);
 }
 
-public sealed class GetHouseHandler(IHouseRepository houses)
+public sealed class GetHouseHandler(IHouseRepository houses, ICurrentUser currentUser)
 {
     public async Task<Result<HouseDto>> HandleAsync(Guid id, CancellationToken cancellationToken)
     {
         var house = await houses.GetByIdAsync(id, cancellationToken);
-        return house is null
-            ? IdentityErrors.HouseNotFound
-            : Result<HouseDto>.Success(ListHousesHandler.Map(house));
+        if (house is null)
+        {
+            return IdentityErrors.HouseNotFound;
+        }
+
+        return house.HasMember(currentUser.Id)
+            ? Result<HouseDto>.Success(ListHousesHandler.Map(house))
+            : AccessErrors.HouseForbidden(id);
     }
 }
 
 public sealed class CreateHouseHandler(
     IHouseRepository houses,
     IUserRepository users,
+    ICurrentUser currentUser,
     IUnitOfWork unitOfWork,
     IDateTimeProvider clock)
 {
@@ -42,13 +53,15 @@ public sealed class CreateHouseHandler(
         CreateHouseRequest request,
         CancellationToken cancellationToken)
     {
-        if (await users.GetByIdAsync(request.OwnerId, cancellationToken) is null)
+        var ownerId = currentUser.Id;
+
+        if (await users.GetByIdAsync(ownerId, cancellationToken) is null)
         {
             return IdentityErrors.OwnerNotFound;
         }
 
         var house = House.Create(
-            request.OwnerId, request.Name, request.Address, request.TimeZone, clock.UtcNow);
+            ownerId, request.Name, request.Address, request.TimeZone, clock.UtcNow);
 
         houses.Add(house);
         await unitOfWork.SaveChangesAsync(cancellationToken);
@@ -59,6 +72,7 @@ public sealed class CreateHouseHandler(
 
 public sealed class GrantHouseAccessHandler(
     IHouseRepository houses,
+    ICurrentUser currentUser,
     IUnitOfWork unitOfWork,
     IDateTimeProvider clock)
 {
@@ -71,6 +85,12 @@ public sealed class GrantHouseAccessHandler(
         if (house is null)
         {
             return Result.Failure(IdentityErrors.HouseNotFound);
+        }
+
+        // Only the owner hands out access to their house.
+        if (house.OwnerId != currentUser.Id)
+        {
+            return Result.Failure(AccessErrors.HouseForbidden(houseId));
         }
 
         if (house.HasMember(request.UserId))

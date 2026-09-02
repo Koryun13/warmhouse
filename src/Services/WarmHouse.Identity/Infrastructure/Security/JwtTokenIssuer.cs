@@ -5,6 +5,7 @@ using Microsoft.IdentityModel.JsonWebTokens;
 using Microsoft.IdentityModel.Tokens;
 using WarmHouse.Identity.Application.Abstractions;
 using WarmHouse.Identity.Domain.Users;
+using WarmHouse.Shared.Infrastructure.Security;
 
 namespace WarmHouse.Identity.Infrastructure.Security;
 
@@ -16,9 +17,10 @@ internal sealed class JwtTokenIssuer(IConfiguration configuration) : ITokenIssue
     private readonly string _issuer = configuration["JWT_ISSUER"] ?? "warmhouse-identity";
     private readonly string _audience = configuration["JWT_AUDIENCE"] ?? "warmhouse";
 
-    // Development fallback only; a deployment must supply JWT_SIGNING_KEY.
+    // The issuer and the services that validate the token read the same
+    // settings, so a mismatch cannot be introduced on one side only.
     private readonly string _signingKey = configuration["JWT_SIGNING_KEY"]
-        ?? "dev-only-signing-key-change-me-in-production-32b";
+        ?? AuthenticationSetup.DevelopmentSigningKey;
 
     public (string Token, DateTimeOffset ExpiresAt) Issue(User user, IReadOnlyCollection<Guid> houseIds)
     {
@@ -31,7 +33,7 @@ internal sealed class JwtTokenIssuer(IConfiguration configuration) : ITokenIssue
             new(JwtRegisteredClaimNames.Name, user.DisplayName),
         };
 
-        claims.AddRange(houseIds.Select(id => new Claim("house", id.ToString())));
+        claims.AddRange(houseIds.Select(id => new Claim(AuthenticationSetup.HouseClaim, id.ToString())));
 
         var descriptor = new SecurityTokenDescriptor
         {

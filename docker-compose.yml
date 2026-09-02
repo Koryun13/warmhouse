@@ -8,6 +8,13 @@ x-service-defaults: &service-defaults
   restart: unless-stopped
   networks: [warmhouse]
 
+# Every service validates the access token itself, so they all read the same
+# issuer, audience and signing key. Override JWT_SIGNING_KEY outside development.
+x-jwt: &jwt
+  JWT_ISSUER: warmhouse-identity
+  JWT_AUDIENCE: warmhouse
+  JWT_SIGNING_KEY: ${JWT_SIGNING_KEY:-dev-only-signing-key-change-me-in-production-32b}
+
 services:
 
   # ---------------------------------------------------------------------------
@@ -89,6 +96,7 @@ services:
       postgres:
         condition: service_healthy
     environment:
+      <<: *jwt
       DATABASE_URL: postgres://postgres:postgres@postgres:5432/warmhouse_identity
       RABBITMQ_HOST: rabbitmq
     ports:
@@ -109,6 +117,7 @@ services:
       rabbitmq:
         condition: service_healthy
     environment:
+      <<: *jwt
       DATABASE_URL: postgres://postgres:postgres@postgres:5432/warmhouse_devices
       RABBITMQ_HOST: rabbitmq
     ports:
@@ -129,6 +138,7 @@ services:
       rabbitmq:
         condition: service_healthy
     environment:
+      <<: *jwt
       DATABASE_URL: postgres://postgres:postgres@postgres:5432/warmhouse_heating
       RABBITMQ_HOST: rabbitmq
     ports:
@@ -149,6 +159,7 @@ services:
       rabbitmq:
         condition: service_healthy
     environment:
+      <<: *jwt
       DATABASE_URL: postgres://postgres:postgres@postgres:5432/warmhouse_lighting
       RABBITMQ_HOST: rabbitmq
     ports:
@@ -169,6 +180,7 @@ services:
       rabbitmq:
         condition: service_healthy
     environment:
+      <<: *jwt
       DATABASE_URL: postgres://postgres:postgres@postgres:5432/warmhouse_gates
       RABBITMQ_HOST: rabbitmq
     ports:
@@ -189,6 +201,7 @@ services:
       rabbitmq:
         condition: service_healthy
     environment:
+      <<: *jwt
       DATABASE_URL: postgres://postgres:postgres@postgres:5432/warmhouse_monitoring
       RABBITMQ_HOST: rabbitmq
     ports:
@@ -209,6 +222,7 @@ services:
       rabbitmq:
         condition: service_healthy
     environment:
+      <<: *jwt
       DATABASE_URL: postgres://postgres:postgres@postgres:5432/warmhouse_telemetry
       RABBITMQ_HOST: rabbitmq
     ports:
@@ -229,6 +243,7 @@ services:
       rabbitmq:
         condition: service_healthy
     environment:
+      <<: *jwt
       DATABASE_URL: postgres://postgres:postgres@postgres:5432/warmhouse_scenarios
       RABBITMQ_HOST: rabbitmq
     ports:
@@ -249,6 +264,7 @@ services:
       rabbitmq:
         condition: service_healthy
     environment:
+      <<: *jwt
       DATABASE_URL: postgres://postgres:postgres@postgres:5432/warmhouse_notifications
       RABBITMQ_HOST: rabbitmq
     ports:

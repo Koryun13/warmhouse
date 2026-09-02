@@ -1,5 +1,6 @@
 using System.Reflection;
 using Microsoft.EntityFrameworkCore;
+using WarmHouse.Shared.Infrastructure.Persistence;
 using WarmHouse.Telemetry.Domain.Measurements;
 using WarmHouse.Telemetry.Domain.Thresholds;
 
@@ -12,5 +13,8 @@ public sealed class TelemetryDbContext(DbContextOptions<TelemetryDbContext> opti
     public DbSet<ThresholdRule> Rules => Set<ThresholdRule>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
-        => modelBuilder.ApplyConfigurationsFromAssembly(Assembly.GetExecutingAssembly());
+    {
+        modelBuilder.ApplyConfigurationsFromAssembly(Assembly.GetExecutingAssembly());
+        modelBuilder.AddMessagingOutbox();
+    }
 }

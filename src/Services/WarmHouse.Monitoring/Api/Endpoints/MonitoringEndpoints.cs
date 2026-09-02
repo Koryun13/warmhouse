@@ -10,7 +10,7 @@ internal sealed class MonitoringEndpoints : IEndpointModule
     {
         var group = app.MapGroup("/api/v1/monitoring/cameras").WithTags("Monitoring");
 
-        group.MapGet("", async (ListCamerasHandler handler, Guid? houseId, CancellationToken ct) =>
+        group.MapGet("", async (ListCamerasHandler handler, Guid houseId, CancellationToken ct) =>
                 (await handler.HandleAsync(houseId, ct)).Match(Results.Ok))
             .WithName("ListCameras")
             .WithSummary("Cameras of a house");

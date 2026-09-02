@@ -7,12 +7,17 @@ using WarmHouse.Telemetry.Domain.Thresholds;
 
 namespace WarmHouse.Telemetry.Application.UseCases.Thresholds;
 
-public sealed class ListThresholdRulesHandler(IThresholdRuleRepository rules)
+public sealed class ListThresholdRulesHandler(IThresholdRuleRepository rules, ICurrentUser currentUser)
 {
     public async Task<Result<IReadOnlyList<ThresholdRuleDto>>> HandleAsync(
         Guid houseId,
         CancellationToken cancellationToken)
     {
+        if (!currentUser.CanAccess(houseId))
+        {
+            return AccessErrors.HouseForbidden(houseId);
+        }
+
         var found = await rules.ListForHouseAsync(houseId, cancellationToken);
         return Result<IReadOnlyList<ThresholdRuleDto>>.Success([.. found.Select(Map)]);
     }
@@ -24,6 +29,7 @@ public sealed class ListThresholdRulesHandler(IThresholdRuleRepository rules)
 
 public sealed class CreateThresholdRuleHandler(
     IThresholdRuleRepository rules,
+    ICurrentUser currentUser,
     IUnitOfWork unitOfWork,
     IDateTimeProvider clock)
 {
@@ -31,6 +37,11 @@ public sealed class CreateThresholdRuleHandler(
         CreateThresholdRuleRequest request,
         CancellationToken cancellationToken)
     {
+        if (!currentUser.CanAccess(request.HouseId))
+        {
+            return AccessErrors.HouseForbidden(request.HouseId);
+        }
+
         if (!TryParse(request.Comparison, out var comparison))
         {
             return TelemetryErrors.UnknownComparison;
@@ -60,12 +71,15 @@ public sealed class CreateThresholdRuleHandler(
     }
 }
 
-public sealed class DeleteThresholdRuleHandler(IThresholdRuleRepository rules, IUnitOfWork unitOfWork)
+public sealed class DeleteThresholdRuleHandler(
+    IThresholdRuleRepository rules,
+    ICurrentUser currentUser,
+    IUnitOfWork unitOfWork)
 {
     public async Task<Result> HandleAsync(Guid id, CancellationToken cancellationToken)
     {
         var rule = await rules.GetByIdAsync(id, cancellationToken);
-        if (rule is null)
+        if (rule is null || !currentUser.CanAccess(rule.HouseId))
         {
             return Result.Failure(TelemetryErrors.RuleNotFound);
         }

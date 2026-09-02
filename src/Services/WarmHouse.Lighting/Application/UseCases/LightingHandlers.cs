@@ -8,23 +8,28 @@ using WarmHouse.Shared.Kernel;
 
 namespace WarmHouse.Lighting.Application.UseCases;
 
-public sealed class ListLightFixturesHandler(ILightFixtureRepository fixtures)
+public sealed class ListLightFixturesHandler(ILightFixtureRepository fixtures, ICurrentUser currentUser)
 {
     public async Task<Result<IReadOnlyList<LightFixtureDto>>> HandleAsync(
-        Guid? houseId,
+        Guid houseId,
         CancellationToken cancellationToken)
     {
+        if (!currentUser.CanAccess(houseId))
+        {
+            return AccessErrors.HouseForbidden(houseId);
+        }
+
         var found = await fixtures.ListAsync(houseId, cancellationToken);
         return Result<IReadOnlyList<LightFixtureDto>>.Success([.. found.Select(LightingMapper.ToDto)]);
     }
 }
 
-public sealed class GetLightFixtureHandler(ILightFixtureRepository fixtures)
+public sealed class GetLightFixtureHandler(ILightFixtureRepository fixtures, ICurrentUser currentUser)
 {
     public async Task<Result<LightFixtureDto>> HandleAsync(Guid id, CancellationToken cancellationToken)
     {
         var fixture = await fixtures.GetByIdAsync(id, cancellationToken);
-        return fixture is null
+        return fixture is null || !currentUser.CanAccess(fixture.HouseId)
             ? LightingErrors.FixtureNotFound
             : Result<LightFixtureDto>.Success(LightingMapper.ToDto(fixture));
     }
@@ -32,6 +37,7 @@ public sealed class GetLightFixtureHandler(ILightFixtureRepository fixtures)
 
 public sealed class SwitchLightHandler(
     ILightFixtureRepository fixtures,
+    ICurrentUser currentUser,
     IUnitOfWork unitOfWork,
     IIntegrationEventPublisher publisher,
     IDateTimeProvider clock)
@@ -42,18 +48,19 @@ public sealed class SwitchLightHandler(
         CancellationToken cancellationToken)
     {
         var fixture = await fixtures.GetByIdAsync(id, cancellationToken);
-        if (fixture is null)
+        if (fixture is null || !currentUser.CanAccess(fixture.HouseId))
         {
             return LightingErrors.FixtureNotFound;
         }
 
         fixture.Switch(request.On, clock.UtcNow);
-        await unitOfWork.SaveChangesAsync(cancellationToken);
 
         await publisher.PublishAsync(
             LightingMapper.Command(fixture.DeviceId, "lighting.switch", request.On ? "on" : "off",
-                [], request.RequestedBy, clock.UtcNow),
+                [], currentUser.Id, clock.UtcNow),
             cancellationToken);
+
+        await unitOfWork.SaveChangesAsync(cancellationToken);
 
         return LightingMapper.ToDto(fixture);
     }
@@ -61,6 +68,7 @@ public sealed class SwitchLightHandler(
 
 public sealed class SetBrightnessHandler(
     ILightFixtureRepository fixtures,
+    ICurrentUser currentUser,
     IUnitOfWork unitOfWork,
     IIntegrationEventPublisher publisher,
     IDateTimeProvider clock)
@@ -76,7 +84,7 @@ public sealed class SetBrightnessHandler(
         }
 
         var fixture = await fixtures.GetByIdAsync(id, cancellationToken);
-        if (fixture is null)
+        if (fixture is null || !currentUser.CanAccess(fixture.HouseId))
         {
             return LightingErrors.FixtureNotFound;
         }
@@ -87,13 +95,14 @@ public sealed class SetBrightnessHandler(
         }
 
         fixture.SetBrightness(request.Brightness, clock.UtcNow);
-        await unitOfWork.SaveChangesAsync(cancellationToken);
 
         await publisher.PublishAsync(
             LightingMapper.Command(fixture.DeviceId, "lighting.brightness", "set",
                 new Dictionary<string, string> { ["brightness"] = request.Brightness.ToString() },
-                request.RequestedBy, clock.UtcNow),
+                currentUser.Id, clock.UtcNow),
             cancellationToken);
+
+        await unitOfWork.SaveChangesAsync(cancellationToken);
 
         return LightingMapper.ToDto(fixture);
     }

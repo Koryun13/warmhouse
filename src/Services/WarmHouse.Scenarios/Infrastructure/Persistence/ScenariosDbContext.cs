@@ -1,6 +1,7 @@
 using System.Reflection;
 using Microsoft.EntityFrameworkCore;
 using WarmHouse.Scenarios.Domain.Automation;
+using WarmHouse.Shared.Infrastructure.Persistence;
 
 namespace WarmHouse.Scenarios.Infrastructure.Persistence;
 
@@ -9,5 +10,8 @@ public sealed class ScenariosDbContext(DbContextOptions<ScenariosDbContext> opti
     public DbSet<Scenario> Scenarios => Set<Scenario>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
-        => modelBuilder.ApplyConfigurationsFromAssembly(Assembly.GetExecutingAssembly());
+    {
+        modelBuilder.ApplyConfigurationsFromAssembly(Assembly.GetExecutingAssembly());
+        modelBuilder.AddMessagingOutbox();
+    }
 }

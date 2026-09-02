@@ -10,9 +10,13 @@ namespace WarmHouse.Telemetry.Application.UseCases.Measurements;
 /// Accepts a reading over HTTP from devices that cannot talk to the broker.
 ///
 /// It publishes an event rather than writing to the database directly, so that
-/// HTTP and broker ingestion converge on exactly one processing path.
+/// HTTP and broker ingestion converge on exactly one processing path. The save
+/// that follows carries no domain change of its own — it is what commits the
+/// outbox row and hands the event to the delivery service.
 /// </summary>
 public sealed class IngestMeasurementHandler(
+    ICurrentUser currentUser,
+    IUnitOfWork unitOfWork,
     IIntegrationEventPublisher publisher,
     IDateTimeProvider clock)
 {
@@ -21,6 +25,11 @@ public sealed class IngestMeasurementHandler(
         if (string.IsNullOrWhiteSpace(request.Metric))
         {
             return Result.Failure(TelemetryErrors.MetricRequired);
+        }
+
+        if (!currentUser.CanAccess(request.HouseId))
+        {
+            return Result.Failure(AccessErrors.HouseForbidden(request.HouseId));
         }
 
         await publisher.PublishAsync(
@@ -34,6 +43,8 @@ public sealed class IngestMeasurementHandler(
                 request.Unit,
                 request.MeasuredAt ?? clock.UtcNow),
             cancellationToken);
+
+        await unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result.Success();
     }

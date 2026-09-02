@@ -1,4 +1,3 @@
-using WarmHouse.Devices.Application.Abstractions;
 using WarmHouse.Devices.Application.Contracts;
 using WarmHouse.Devices.Domain;
 using WarmHouse.Devices.Domain.Abstractions;
@@ -15,15 +14,19 @@ namespace WarmHouse.Devices.Application.UseCases.Devices;
 /// self-service flow that replaces the engineer visit required by the As-Is
 /// system.
 ///
-/// After the device is stored, the domain event raised by the aggregate is
-/// translated into a <see cref="DeviceRegistered"/> integration event. Domain
-/// services subscribe to it and project only the devices they can serve, which
-/// is why adding a new device category never requires touching them.
+/// The domain event raised by the aggregate is translated into a
+/// <see cref="DeviceRegistered"/> integration event. Domain services subscribe
+/// to it and project only the devices they can serve, which is why adding a new
+/// device category never requires touching them.
+///
+/// The publish precedes the save on purpose: it puts the event in the outbox
+/// table, and the same transaction that stores the device commits it. Either
+/// both are durable or neither is.
 /// </summary>
 public sealed class RegisterDeviceHandler(
     IDeviceRepository devices,
     IDeviceTypeRepository deviceTypes,
-    IDeviceQueries queries,
+    ICurrentUser currentUser,
     IUnitOfWork unitOfWork,
     IIntegrationEventPublisher publisher,
     IDateTimeProvider clock)
@@ -32,6 +35,11 @@ public sealed class RegisterDeviceHandler(
         RegisterDeviceRequest request,
         CancellationToken cancellationToken)
     {
+        if (!currentUser.CanAccess(request.HouseId))
+        {
+            return AccessErrors.HouseForbidden(request.HouseId);
+        }
+
         var deviceType = await deviceTypes.GetByCodeAsync(request.DeviceTypeCode, cancellationToken);
         if (deviceType is null)
         {
@@ -45,7 +53,7 @@ public sealed class RegisterDeviceHandler(
 
         var device = Device.Register(
             request.HouseId,
-            request.OwnerId,
+            currentUser.Id,
             deviceType.Id,
             request.SerialNumber,
             request.Name,
@@ -54,7 +62,6 @@ public sealed class RegisterDeviceHandler(
             clock.UtcNow);
 
         devices.Add(device);
-        await unitOfWork.SaveChangesAsync(cancellationToken);
 
         foreach (var _ in device.DomainEvents.OfType<DeviceRegisteredDomainEvent>())
         {
@@ -74,8 +81,22 @@ public sealed class RegisterDeviceHandler(
         }
 
         device.ClearDomainEvents();
+        await unitOfWork.SaveChangesAsync(cancellationToken);
 
-        var dto = await queries.GetDeviceAsync(device.Id, cancellationToken);
-        return dto is null ? DeviceErrors.DeviceNotFound : Result<DeviceDto>.Success(dto);
+        return new DeviceDto(
+            device.Id,
+            device.HouseId,
+            device.OwnerId,
+            device.DeviceTypeId,
+            deviceType.Code,
+            deviceType.Category,
+            device.SerialNumber,
+            device.Name,
+            device.Location,
+            device.Status,
+            device.Firmware,
+            deviceType.Capabilities,
+            device.LastSeenAt,
+            device.RegisteredAt);
     }
 }

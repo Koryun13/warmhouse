@@ -35,10 +35,10 @@ public sealed class ApplyTemperatureHandler(
         }
 
         var decision = zone.ApplyMeasurement(message.Value, message.MeasuredAt, clock.UtcNow);
-        await unitOfWork.SaveChangesAsync(cancellationToken);
 
         if (decision == HeatingDecision.None)
         {
+            await unitOfWork.SaveChangesAsync(cancellationToken);
             return;
         }
 
@@ -50,6 +50,8 @@ public sealed class ApplyTemperatureHandler(
                 zone.HouseId,
                 clock.UtcNow),
             cancellationToken);
+
+        await unitOfWork.SaveChangesAsync(cancellationToken);
 
         logger.LogInformation(
             "Zone {ZoneId}: {Decision} at {Current} degrees, target {Target}.",

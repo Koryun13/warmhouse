@@ -2,6 +2,7 @@ using System.Reflection;
 using Microsoft.EntityFrameworkCore;
 using WarmHouse.Devices.Domain.DeviceTypes;
 using WarmHouse.Devices.Domain.Devices;
+using WarmHouse.Shared.Infrastructure.Persistence;
 
 namespace WarmHouse.Devices.Infrastructure.Persistence;
 
@@ -18,5 +19,8 @@ public sealed class DevicesDbContext(DbContextOptions<DevicesDbContext> options)
     public DbSet<DeviceCommand> Commands => Set<DeviceCommand>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
-        => modelBuilder.ApplyConfigurationsFromAssembly(Assembly.GetExecutingAssembly());
+    {
+        modelBuilder.ApplyConfigurationsFromAssembly(Assembly.GetExecutingAssembly());
+        modelBuilder.AddMessagingOutbox();
+    }
 }

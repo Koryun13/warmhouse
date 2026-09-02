@@ -13,7 +13,9 @@ internal sealed class TelemetryQueries(TelemetryDbContext context) : ITelemetryQ
         TelemetryQuery query,
         CancellationToken cancellationToken)
     {
-        var points = context.Points.AsNoTracking().Where(p => p.DeviceId == query.DeviceId);
+        var points = context.Points
+            .AsNoTracking()
+            .Where(p => p.HouseId == query.HouseId && p.DeviceId == query.DeviceId);
 
         if (!string.IsNullOrWhiteSpace(query.Metric))
         {
@@ -41,6 +43,7 @@ internal sealed class TelemetryQueries(TelemetryDbContext context) : ITelemetryQ
     }
 
     public async Task<MeasurementDto?> GetLatestAsync(
+        Guid houseId,
         Guid deviceId,
         string metric,
         CancellationToken cancellationToken)
@@ -49,7 +52,7 @@ internal sealed class TelemetryQueries(TelemetryDbContext context) : ITelemetryQ
 
         return await context.Points
             .AsNoTracking()
-            .Where(p => p.DeviceId == deviceId && p.Metric == normalized)
+            .Where(p => p.HouseId == houseId && p.DeviceId == deviceId && p.Metric == normalized)
             .OrderByDescending(p => p.MeasuredAt)
             .Select(p => new MeasurementDto(p.DeviceId, p.Metric, p.Value, p.Unit, p.MeasuredAt))
             .FirstOrDefaultAsync(cancellationToken);

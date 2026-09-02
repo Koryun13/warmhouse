@@ -12,4 +12,5 @@ public sealed record GateDto(
     DateTimeOffset? LastOperatedAt,
     DateTimeOffset UpdatedAt);
 
-public sealed record GateOperationRequest(Guid RequestedBy);
+// Gate operations carry no request body: the requester is the authenticated
+// caller, taken from the token, and the operation is part of the route.

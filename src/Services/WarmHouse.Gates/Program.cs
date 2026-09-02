@@ -5,14 +5,16 @@ using WarmHouse.Gates.Infrastructure.Persistence;
 using WarmHouse.Shared.Infrastructure.Hosting;
 using WarmHouse.Shared.Infrastructure.Messaging;
 using WarmHouse.Shared.Infrastructure.Persistence;
+using WarmHouse.Shared.Infrastructure.Security;
 
 const string ServiceTitle = "Gate Control";
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.AddServiceDefaults(ServiceTitle);
+builder.AddServiceAuthentication();
 builder.AddServicePostgres<GatesDbContext>("warmhouse_gates");
-builder.AddServiceMessaging("gates", Assembly.GetExecutingAssembly());
+builder.AddServiceMessaging<GatesDbContext>("gates", Assembly.GetExecutingAssembly());
 
 builder.Services.AddGatesApplication();
 builder.Services.AddGatesInfrastructure();

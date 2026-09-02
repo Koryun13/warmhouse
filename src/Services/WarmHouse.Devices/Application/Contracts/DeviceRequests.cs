@@ -11,9 +11,9 @@ public sealed record CreateDeviceTypeRequest(
     ConnectivityProtocol Protocol,
     IReadOnlyCollection<string> Capabilities);
 
+/// <summary>The owner is the authenticated caller; the house must be one they can reach.</summary>
 public sealed record RegisterDeviceRequest(
     Guid HouseId,
-    Guid OwnerId,
     string DeviceTypeCode,
     string SerialNumber,
     string Name,
@@ -25,5 +25,4 @@ public sealed record UpdateDeviceStatusRequest(DeviceStatus Status, string? Reas
 public sealed record IssueCommandRequest(
     string Capability,
     string Action,
-    Dictionary<string, string>? Payload,
-    Guid RequestedBy);
+    Dictionary<string, string>? Payload);

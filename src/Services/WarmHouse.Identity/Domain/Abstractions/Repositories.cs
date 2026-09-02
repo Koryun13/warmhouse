@@ -18,9 +18,10 @@ public interface IHouseRepository
 {
     Task<House?> GetByIdAsync(Guid id, CancellationToken cancellationToken);
 
-    Task<IReadOnlyList<House>> ListAsync(Guid? ownerId, CancellationToken cancellationToken);
-
     /// <summary>Every house the user can reach, whether as owner or as a member.</summary>
+    Task<IReadOnlyList<House>> ListAccessibleAsync(Guid userId, CancellationToken cancellationToken);
+
+    /// <summary>The same set as <see cref="ListAccessibleAsync"/>, reduced to identifiers for the token.</summary>
     Task<IReadOnlyList<Guid>> ListAccessibleHouseIdsAsync(Guid userId, CancellationToken cancellationToken);
 
     void Add(House house);

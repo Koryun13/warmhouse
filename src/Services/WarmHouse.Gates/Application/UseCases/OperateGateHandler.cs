@@ -22,6 +22,7 @@ public enum GateOperation
 /// </summary>
 public sealed class OperateGateHandler(
     IGateRepository gates,
+    ICurrentUser currentUser,
     IUnitOfWork unitOfWork,
     IIntegrationEventPublisher publisher,
     IDateTimeProvider clock)
@@ -29,11 +30,10 @@ public sealed class OperateGateHandler(
     public async Task<Result<GateDto>> HandleAsync(
         Guid gateId,
         GateOperation operation,
-        GateOperationRequest request,
         CancellationToken cancellationToken)
     {
         var gate = await gates.GetByIdAsync(gateId, cancellationToken);
-        if (gate is null)
+        if (gate is null || !currentUser.CanAccess(gate.HouseId))
         {
             return GateErrors.NotFound;
         }
@@ -65,11 +65,14 @@ public sealed class OperateGateHandler(
 
         var commandId = Guid.CreateVersion7();
         gate.BeginOperation(commandId, transitionalState, clock.UtcNow);
-        await unitOfWork.SaveChangesAsync(cancellationToken);
 
+        // Outbox: the gate cannot be left waiting for a command that was never
+        // sent, nor a command sent for a transition that was never recorded.
         await publisher.PublishAsync(
-            GateMapper.Command(commandId, gate.DeviceId, capability, action, request.RequestedBy, clock.UtcNow),
+            GateMapper.Command(commandId, gate.DeviceId, capability, action, currentUser.Id, clock.UtcNow),
             cancellationToken);
+
+        await unitOfWork.SaveChangesAsync(cancellationToken);
 
         return GateMapper.ToDto(gate);
     }
