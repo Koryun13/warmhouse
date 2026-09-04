@@ -6,7 +6,7 @@ namespace WarmHouse.Lighting.Application.Mapping;
 /// Builds the device commands this service emits. Centralising the capability
 /// names keeps them consistent across the handlers that send them.
 /// </summary>
-internal static class LightingCommandFactory
+public static class LightingCommandFactory
 {
     public static DeviceCommandRequested Command(
         Guid deviceId,

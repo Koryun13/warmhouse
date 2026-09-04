@@ -4,7 +4,7 @@ using WarmHouse.Devices.Domain.Entities;
 namespace WarmHouse.Devices.Application.Mapping;
 
 /// <summary>Projects the command aggregate onto its published shape.</summary>
-internal static class DeviceCommandMapper
+public static class DeviceCommandMapper
 {
     public static DeviceCommandDto ToDto(DeviceCommand command) => new(
         command.Id,

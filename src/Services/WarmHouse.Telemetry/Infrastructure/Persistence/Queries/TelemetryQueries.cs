@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using WarmHouse.Telemetry.Application.Abstractions;
 using WarmHouse.Telemetry.Application.Contracts.Requests;
 using WarmHouse.Telemetry.Application.Contracts.Responses;
+using WarmHouse.Telemetry.Application.Mapping;
 
 namespace WarmHouse.Telemetry.Infrastructure.Persistence.Queries;
 
@@ -39,7 +40,7 @@ internal sealed class TelemetryQueries(TelemetryDbContext context) : ITelemetryQ
         return await points
             .OrderByDescending(p => p.MeasuredAt)
             .Take(Math.Clamp(query.Limit ?? DefaultLimit, 1, MaxLimit))
-            .Select(p => new MeasurementDto(p.DeviceId, p.Metric, p.Value, p.Unit, p.MeasuredAt))
+            .Select(MeasurementMapper.Projection)
             .ToListAsync(cancellationToken);
     }
 
@@ -55,7 +56,7 @@ internal sealed class TelemetryQueries(TelemetryDbContext context) : ITelemetryQ
             .AsNoTracking()
             .Where(p => p.HouseId == houseId && p.DeviceId == deviceId && p.Metric == normalized)
             .OrderByDescending(p => p.MeasuredAt)
-            .Select(p => new MeasurementDto(p.DeviceId, p.Metric, p.Value, p.Unit, p.MeasuredAt))
+            .Select(MeasurementMapper.Projection)
             .FirstOrDefaultAsync(cancellationToken);
     }
 }

@@ -4,7 +4,7 @@ using WarmHouse.Notifications.Domain.Entities;
 namespace WarmHouse.Notifications.Application.Mapping;
 
 /// <summary>Projects the notification aggregate onto its published shape.</summary>
-internal static class NotificationMapper
+public static class NotificationMapper
 {
     public static NotificationDto ToDto(Notification notification) => new(
         notification.Id,

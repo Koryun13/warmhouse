@@ -4,7 +4,7 @@ using WarmHouse.Lighting.Domain.Entities;
 namespace WarmHouse.Lighting.Application.Mapping;
 
 /// <summary>Projects the fixture aggregate onto its published shape.</summary>
-internal static class LightFixtureMapper
+public static class LightFixtureMapper
 {
     public static LightFixtureDto ToDto(LightFixture fixture) => new(
         fixture.Id, fixture.HouseId, fixture.DeviceId, fixture.Name, fixture.Location,

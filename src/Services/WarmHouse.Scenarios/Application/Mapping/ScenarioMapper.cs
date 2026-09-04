@@ -4,7 +4,7 @@ using WarmHouse.Scenarios.Domain.Entities;
 namespace WarmHouse.Scenarios.Application.Mapping;
 
 /// <summary>Translates between the scenario aggregate and its published shapes.</summary>
-internal static class ScenarioMapper
+public static class ScenarioMapper
 {
     public static ScenarioStep ToStep(ScenarioStepDto dto) => new()
     {
@@ -18,6 +18,16 @@ internal static class ScenarioMapper
         Body = dto.Body,
     };
 
+    public static ScenarioStepDto ToDto(ScenarioStep step) => new(
+        step.Kind,
+        step.DeviceId,
+        step.Capability,
+        step.Action,
+        step.RecipientId,
+        step.Channel,
+        step.Subject,
+        step.Body);
+
     public static ScenarioDto ToDto(Scenario scenario) => new(
         scenario.Id,
         scenario.HouseId,
@@ -26,8 +36,7 @@ internal static class ScenarioMapper
         scenario.Trigger,
         scenario.TriggerMetric,
         scenario.TriggerDeviceId,
-        [.. scenario.Steps.Select(s => new ScenarioStepDto(
-            s.Kind, s.DeviceId, s.Capability, s.Action, s.RecipientId, s.Channel, s.Subject, s.Body))],
+        [.. scenario.Steps.Select(ToDto)],
         scenario.CreatedAt,
         scenario.LastTriggeredAt);
 }

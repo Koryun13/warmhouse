@@ -7,7 +7,7 @@ namespace WarmHouse.Heating.Application.Mapping;
 /// Builds the device commands this service emits. Centralising the capability
 /// names keeps them consistent across the use cases that send them.
 /// </summary>
-internal static class HeatingCommandFactory
+public static class HeatingCommandFactory
 {
     public static DeviceCommandRequested Setpoint(HeatingZone zone, Guid requestedBy, DateTimeOffset now)
         => Build(zone.DeviceId, "heating.setpoint", "set",

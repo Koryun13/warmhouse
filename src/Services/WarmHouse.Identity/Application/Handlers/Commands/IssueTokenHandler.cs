@@ -1,6 +1,7 @@
 using WarmHouse.Identity.Application.Abstractions;
 using WarmHouse.Identity.Application.Contracts.Requests;
 using WarmHouse.Identity.Application.Contracts.Responses;
+using WarmHouse.Identity.Application.Mapping;
 using WarmHouse.Identity.Domain.Entities;
 using WarmHouse.Identity.Domain.Errors;
 using WarmHouse.Identity.Domain.Repositories;
@@ -32,6 +33,6 @@ public sealed class IssueTokenHandler(
         var houseIds = await houses.ListAccessibleHouseIdsAsync(user.Id, cancellationToken);
         var (token, expiresAt) = issuer.Issue(user, houseIds);
 
-        return new TokenDto(token, "Bearer", expiresAt);
+        return TokenMapper.ToDto(token, expiresAt);
     }
 }

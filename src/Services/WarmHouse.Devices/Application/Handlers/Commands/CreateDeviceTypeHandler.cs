@@ -2,6 +2,7 @@ using WarmHouse.Devices.Application.Contracts.Requests;
 using WarmHouse.Devices.Application.Contracts.Responses;
 using WarmHouse.Devices.Domain.Entities;
 using WarmHouse.Devices.Domain.Errors;
+using WarmHouse.Devices.Application.Mapping;
 using WarmHouse.Devices.Domain.Repositories;
 using WarmHouse.Shared.Application.Abstractions;
 using WarmHouse.Shared.Kernel;
@@ -46,14 +47,6 @@ public sealed class CreateDeviceTypeHandler(
         repository.Add(deviceType);
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
-        return new DeviceTypeDto(
-            deviceType.Id,
-            deviceType.Code,
-            deviceType.Name,
-            deviceType.Manufacturer,
-            deviceType.Category,
-            deviceType.Protocol,
-            deviceType.Capabilities,
-            deviceType.CreatedAt);
+        return DeviceTypeMapper.ToDto(deviceType);
     }
 }

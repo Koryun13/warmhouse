@@ -1,7 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using WarmHouse.Devices.Application.Abstractions;
 using WarmHouse.Devices.Application.Contracts.Responses;
-using WarmHouse.Devices.Domain.Entities;
+using WarmHouse.Devices.Application.Mapping;
 using WarmHouse.Shared.Contracts.Enums;
 
 namespace WarmHouse.Devices.Infrastructure.Persistence.Queries;
@@ -28,7 +28,7 @@ internal sealed class DeviceQueries(DevicesDbContext context) : IDeviceQueries
 
         var types = await query.OrderBy(t => t.Code).ToListAsync(cancellationToken);
 
-        return [.. types.Select(Map)];
+        return [.. types.Select(DeviceTypeMapper.ToDto)];
     }
 
     public async Task<IReadOnlyList<DeviceDto>> ListDevicesAsync(
@@ -38,10 +38,13 @@ internal sealed class DeviceQueries(DevicesDbContext context) : IDeviceQueries
     {
         // An anonymous projection keeps the join translatable to SQL; a custom
         // type holding two entities is not something EF Core can translate.
-        var query = from device in context.Devices.AsNoTracking()
-                    join type in context.DeviceTypes.AsNoTracking()
-                        on device.DeviceTypeId equals type.Id
-                    select new { Device = device, Type = type };
+        var query = context.Devices
+            .AsNoTracking()
+            .Join(
+                context.DeviceTypes.AsNoTracking(),
+                device => device.DeviceTypeId,
+                type => type.Id,
+                (device, type) => new { Device = device, Type = type });
 
         if (houseId is { } house)
         {
@@ -57,19 +60,22 @@ internal sealed class DeviceQueries(DevicesDbContext context) : IDeviceQueries
             .OrderBy(row => row.Device.RegisteredAt)
             .ToListAsync(cancellationToken);
 
-        return [.. rows.Select(row => Map(row.Device, row.Type))];
+        return [.. rows.Select(row => DeviceMapper.ToDto(row.Device, row.Type))];
     }
 
     public async Task<DeviceDto?> GetDeviceAsync(Guid deviceId, CancellationToken cancellationToken)
     {
-        var row = await (from device in context.Devices.AsNoTracking()
-                         join type in context.DeviceTypes.AsNoTracking()
-                             on device.DeviceTypeId equals type.Id
-                         where device.Id == deviceId
-                         select new { Device = device, Type = type })
+        var row = await context.Devices
+            .AsNoTracking()
+            .Where(device => device.Id == deviceId)
+            .Join(
+                context.DeviceTypes.AsNoTracking(),
+                device => device.DeviceTypeId,
+                type => type.Id,
+                (device, type) => new { Device = device, Type = type })
             .FirstOrDefaultAsync(cancellationToken);
 
-        return row is null ? null : Map(row.Device, row.Type);
+        return row is null ? null : DeviceMapper.ToDto(row.Device, row.Type);
     }
 
     public async Task<DeviceCommandDto?> GetCommandAsync(
@@ -81,44 +87,6 @@ internal sealed class DeviceQueries(DevicesDbContext context) : IDeviceQueries
             .AsNoTracking()
             .FirstOrDefaultAsync(c => c.Id == commandId && c.DeviceId == deviceId, cancellationToken);
 
-        return command is null
-            ? null
-            : new DeviceCommandDto(
-                command.Id,
-                command.DeviceId,
-                command.Capability,
-                command.Action,
-                command.Payload,
-                command.Status,
-                command.Error,
-                command.CorrelationId,
-                command.RequestedAt,
-                command.CompletedAt);
+        return command is null ? null : DeviceCommandMapper.ToDto(command);
     }
-
-    private static DeviceTypeDto Map(DeviceType type) => new(
-        type.Id,
-        type.Code,
-        type.Name,
-        type.Manufacturer,
-        type.Category,
-        type.Protocol,
-        type.Capabilities,
-        type.CreatedAt);
-
-    private static DeviceDto Map(Device device, DeviceType type) => new(
-        device.Id,
-        device.HouseId,
-        device.OwnerId,
-        device.DeviceTypeId,
-        type.Code,
-        type.Category,
-        device.SerialNumber,
-        device.Name,
-        device.Location,
-        device.Status,
-        device.Firmware,
-        type.Capabilities,
-        device.LastSeenAt,
-        device.RegisteredAt);
 }

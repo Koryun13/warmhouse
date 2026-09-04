@@ -5,7 +5,7 @@ using WarmHouse.Shared.Contracts.Events;
 namespace WarmHouse.Gates.Application.Mapping;
 
 /// <summary>Projects the gate aggregate onto the shapes it is published as.</summary>
-internal static class GateMapper
+public static class GateMapper
 {
     public static GateDto ToDto(Gate gate) => new(
         gate.Id, gate.HouseId, gate.DeviceId, gate.Name, gate.State,

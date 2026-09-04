@@ -1,5 +1,6 @@
 using WarmHouse.Devices.Application.Contracts.Requests;
 using WarmHouse.Devices.Application.Contracts.Responses;
+using WarmHouse.Devices.Application.Mapping;
 using WarmHouse.Devices.Domain.Entities;
 using WarmHouse.Devices.Domain.Errors;
 using WarmHouse.Devices.Domain.Events;
@@ -85,20 +86,6 @@ public sealed class RegisterDeviceHandler(
         device.ClearDomainEvents();
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
-        return new DeviceDto(
-            device.Id,
-            device.HouseId,
-            device.OwnerId,
-            device.DeviceTypeId,
-            deviceType.Code,
-            deviceType.Category,
-            device.SerialNumber,
-            device.Name,
-            device.Location,
-            device.Status,
-            device.Firmware,
-            deviceType.Capabilities,
-            device.LastSeenAt,
-            device.RegisteredAt);
+        return DeviceMapper.ToDto(device, deviceType);
     }
 }

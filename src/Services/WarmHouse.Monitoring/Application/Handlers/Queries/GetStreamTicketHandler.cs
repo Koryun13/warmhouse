@@ -1,4 +1,5 @@
 using WarmHouse.Monitoring.Application.Contracts.Responses;
+using WarmHouse.Monitoring.Application.Mapping;
 using WarmHouse.Monitoring.Domain.Entities;
 using WarmHouse.Monitoring.Domain.Errors;
 using WarmHouse.Monitoring.Domain.Repositories;
@@ -29,9 +30,6 @@ public sealed class GetStreamTicketHandler(
             return MonitoringErrors.StreamUnavailable;
         }
 
-        return new StreamTicketDto(
-            camera.Id,
-            camera.StreamUrl!,
-            clock.UtcNow.Add(Camera.TicketLifetime));
+        return StreamTicketMapper.ToDto(camera, clock.UtcNow.Add(Camera.TicketLifetime));
     }
 }
