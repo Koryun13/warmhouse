@@ -1,6 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using WarmHouse.Devices.Domain.DeviceTypes;
+using WarmHouse.Devices.Domain.Entities;
 
 namespace WarmHouse.Devices.Infrastructure.Persistence.Configurations;
 

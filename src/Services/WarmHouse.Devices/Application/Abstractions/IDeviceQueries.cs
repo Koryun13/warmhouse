@@ -1,4 +1,4 @@
-using WarmHouse.Devices.Application.Contracts;
+using WarmHouse.Devices.Application.Contracts.Responses;
 using WarmHouse.Shared.Contracts.Enums;
 
 namespace WarmHouse.Devices.Application.Abstractions;

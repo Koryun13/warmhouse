@@ -1,10 +1,11 @@
 using Microsoft.Extensions.DependencyInjection;
 using WarmHouse.Devices.Application.Abstractions;
-using WarmHouse.Devices.Application.UseCases.Devices;
-using WarmHouse.Devices.Domain.Abstractions;
+using WarmHouse.Devices.Domain.Repositories;
 using WarmHouse.Devices.Infrastructure.Gateways;
 using WarmHouse.Devices.Infrastructure.Persistence;
+using WarmHouse.Devices.Infrastructure.Persistence.Queries;
 using WarmHouse.Devices.Infrastructure.Persistence.Repositories;
+using WarmHouse.Devices.Infrastructure.Persistence.Seeders;
 using WarmHouse.Shared.Infrastructure.Persistence;
 
 namespace WarmHouse.Devices.Infrastructure;

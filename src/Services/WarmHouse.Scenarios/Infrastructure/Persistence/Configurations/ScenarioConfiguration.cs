@@ -1,6 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using WarmHouse.Scenarios.Domain.Automation;
+using WarmHouse.Scenarios.Domain.Entities;
 
 namespace WarmHouse.Scenarios.Infrastructure.Persistence.Configurations;
 

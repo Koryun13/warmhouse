@@ -5,7 +5,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using WarmHouse.Shared.Application.Abstractions;
-using WarmHouse.Shared.Contracts.Events;
 
 namespace WarmHouse.Shared.Infrastructure.Messaging;
 
@@ -103,15 +102,4 @@ public static class MessagingSetup
 
         return builder;
     }
-}
-
-/// <summary>
-/// Adapter that implements the application's publishing port over MassTransit.
-/// It is the only type in the service that knows the broker exists.
-/// </summary>
-internal sealed class MassTransitEventPublisher(IPublishEndpoint publishEndpoint) : IIntegrationEventPublisher
-{
-    public Task PublishAsync<TEvent>(TEvent integrationEvent, CancellationToken cancellationToken)
-        where TEvent : class, IIntegrationEvent
-        => publishEndpoint.Publish(integrationEvent, cancellationToken);
 }

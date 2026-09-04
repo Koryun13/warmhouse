@@ -1,6 +1,6 @@
 using System.Reflection;
 using Microsoft.EntityFrameworkCore;
-using WarmHouse.Scenarios.Domain.Automation;
+using WarmHouse.Scenarios.Domain.Entities;
 using WarmHouse.Shared.Infrastructure.Persistence;
 
 namespace WarmHouse.Scenarios.Infrastructure.Persistence;

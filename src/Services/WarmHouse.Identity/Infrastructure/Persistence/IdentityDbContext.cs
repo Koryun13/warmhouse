@@ -1,7 +1,6 @@
 using System.Reflection;
 using Microsoft.EntityFrameworkCore;
-using WarmHouse.Identity.Domain.Houses;
-using WarmHouse.Identity.Domain.Users;
+using WarmHouse.Identity.Domain.Entities;
 
 namespace WarmHouse.Identity.Infrastructure.Persistence;
 

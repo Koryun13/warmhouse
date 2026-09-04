@@ -1,8 +1,7 @@
 using System.Reflection;
 using Microsoft.EntityFrameworkCore;
 using WarmHouse.Shared.Infrastructure.Persistence;
-using WarmHouse.Telemetry.Domain.Measurements;
-using WarmHouse.Telemetry.Domain.Thresholds;
+using WarmHouse.Telemetry.Domain.Entities;
 
 namespace WarmHouse.Telemetry.Infrastructure.Persistence;
 

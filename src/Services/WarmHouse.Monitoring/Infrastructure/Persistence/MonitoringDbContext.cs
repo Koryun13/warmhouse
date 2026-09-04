@@ -1,6 +1,6 @@
 using System.Reflection;
 using Microsoft.EntityFrameworkCore;
-using WarmHouse.Monitoring.Domain.Cameras;
+using WarmHouse.Monitoring.Domain.Entities;
 using WarmHouse.Shared.Infrastructure.Persistence;
 
 namespace WarmHouse.Monitoring.Infrastructure.Persistence;

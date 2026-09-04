@@ -1,6 +1,6 @@
 using Microsoft.EntityFrameworkCore;
-using WarmHouse.Heating.Domain.Abstractions;
-using WarmHouse.Heating.Domain.Zones;
+using WarmHouse.Heating.Domain.Entities;
+using WarmHouse.Heating.Domain.Repositories;
 
 namespace WarmHouse.Heating.Infrastructure.Persistence.Repositories;
 

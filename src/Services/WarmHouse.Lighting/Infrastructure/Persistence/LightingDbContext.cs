@@ -1,6 +1,6 @@
 using System.Reflection;
 using Microsoft.EntityFrameworkCore;
-using WarmHouse.Lighting.Domain.Fixtures;
+using WarmHouse.Lighting.Domain.Entities;
 using WarmHouse.Shared.Infrastructure.Persistence;
 
 namespace WarmHouse.Lighting.Infrastructure.Persistence;

@@ -1,5 +1,5 @@
 using Microsoft.Extensions.DependencyInjection;
-using WarmHouse.Lighting.Domain.Abstractions;
+using WarmHouse.Lighting.Domain.Repositories;
 using WarmHouse.Lighting.Infrastructure.Persistence.Repositories;
 
 namespace WarmHouse.Lighting.Infrastructure;

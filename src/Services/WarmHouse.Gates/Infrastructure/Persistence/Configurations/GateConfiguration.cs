@@ -1,6 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using WarmHouse.Gates.Domain.Gates;
+using WarmHouse.Gates.Domain.Entities;
 
 namespace WarmHouse.Gates.Infrastructure.Persistence.Configurations;
 

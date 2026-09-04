@@ -1,6 +1,6 @@
 using Microsoft.EntityFrameworkCore;
-using WarmHouse.Devices.Domain.Abstractions;
-using WarmHouse.Devices.Domain.DeviceTypes;
+using WarmHouse.Devices.Domain.Entities;
+using WarmHouse.Devices.Domain.Repositories;
 using WarmHouse.Shared.Contracts.Enums;
 
 namespace WarmHouse.Devices.Infrastructure.Persistence.Repositories;

@@ -10,7 +10,7 @@ using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
 using Scalar.AspNetCore;
 using WarmHouse.Shared.Application.Abstractions;
-using WarmHouse.Shared.Infrastructure.Presentation;
+using WarmHouse.Shared.Presentation;
 
 namespace WarmHouse.Shared.Infrastructure.Hosting;
 
@@ -121,9 +121,4 @@ public static class ServiceDefaults
         options.PropertyNameCaseInsensitive = true;
         options.Converters.Add(new JsonStringEnumConverter(JsonNamingPolicy.SnakeCaseLower));
     }
-}
-
-internal sealed class SystemDateTimeProvider : IDateTimeProvider
-{
-    public DateTimeOffset UtcNow => DateTimeOffset.UtcNow;
 }

@@ -7,16 +7,16 @@ Container(gateway, "API Gateway", "YARP", "")
 ContainerQueue(broker, "Шина событий", "RabbitMQ", "")
 ContainerDb(db, "heating_db", "PostgreSQL", "heating_zones")
 
-Container_Boundary(api, "Presentation — папка Api/") {
+Container_Boundary(api, "Presentation — папка Presentation/") {
     Component(endpoints, "HeatingEndpoints", "IEndpointModule", "GET /api/v1/heating/zones, PUT /{id}/setpoint, PUT /{id}/mode.")
 }
 
 Container_Boundary(application, "Application — папка Application/") {
-    Component(setSetpoint, "SetSetpointHandler", "Use case", "Проверяет диапазон 5–35 °C и публикует команду термостату.")
-    Component(setMode, "SetHeatingModeHandler", "Use case", "Переключает Off / Manual / Auto.")
-    Component(projectDevice, "ProjectDeviceHandler", "Use case", "DeviceRegistered: заводит зону, если категория Heating или заявлена heating.setpoint. Прочие устройства игнорируются.")
-    Component(applyTemp, "ApplyTemperatureHandler", "Use case", "TelemetryReported: передаёт измерение агрегату и превращает его решение в команду.")
-    Component(listZones, "ListHeatingZonesHandler / GetHeatingZoneHandler", "Use cases", "Чтение состояния зон.")
+    Component(setSetpoint, "SetSetpointHandler", "Handler", "Проверяет диапазон 5–35 °C и публикует команду термостату.")
+    Component(setMode, "SetHeatingModeHandler", "Handler", "Переключает Off / Manual / Auto.")
+    Component(projectDevice, "ProjectDeviceHandler", "Handler", "DeviceRegistered: заводит зону, если категория Heating или заявлена heating.setpoint. Прочие устройства игнорируются.")
+    Component(applyTemp, "ApplyTemperatureHandler", "Handler", "TelemetryReported: передаёт измерение агрегату и превращает его решение в команду.")
+    Component(listZones, "ListHeatingZonesHandler / GetHeatingZoneHandler", "Handlers", "Чтение состояния зон.")
 }
 
 Container_Boundary(domain, "Domain — папка Domain/") {

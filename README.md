@@ -18,30 +18,54 @@
 
 ## Чистая архитектура внутри каждого микросервиса
 
-Каждый сервис — один проект, слои внутри него разложены по папкам:
+Каждый сервис — один проект, слои внутри него разложены по папкам, а внутри
+слоя папка соответствует роли типа:
 
 ```
 src/Services/WarmHouse.<Сервис>/
-├── Domain/          сущности, агрегаты, value-объекты, доменные события,
-│                   правила, порты хранения
-├── Application/     сценарии использования (по файлу на сценарий), DTO,
-│                   исходящие порты
-├── Infrastructure/  DbContext, конфигурации EF, репозитории,
-│                   потребители RabbitMQ, адаптеры
-├── Api/             модули эндпойнтов
-└── Program.cs       composition root
+├── Domain/
+│   ├── Entities/        сущности и агрегаты
+│   ├── ValueObjects/    value-объекты
+│   ├── Enums/           перечисления домена
+│   ├── Events/          доменные события
+│   ├── Repositories/    порты хранения
+│   └── Errors/          ошибки домена с устойчивыми кодами
+├── Application/
+│   ├── Abstractions/    исходящие порты (запросы, шлюзы, безопасность)
+│   ├── Contracts/
+│   │   ├── Requests/    входящие DTO
+│   │   └── Responses/   исходящие DTO
+│   ├── Handlers/
+│   │   ├── Commands/    обработчики, меняющие состояние
+│   │   ├── Queries/     обработчики чтения
+│   │   └── Events/      реакция на интеграционные события
+│   ├── Mapping/         преобразование домен ↔ DTO
+│   └── DependencyInjection.cs
+├── Infrastructure/
+│   ├── Persistence/     DbContext, Configurations/, Repositories/,
+│   │                    Queries/, Seeders/
+│   ├── Messaging/Consumers/   потребители RabbitMQ
+│   ├── ...              адаптеры внешних систем (Gateways/, Security/, Delivery/)
+│   └── DependencyInjection.cs
+├── Presentation/
+│   └── Endpoints/       модули эндпойнтов
+└── Program.cs           composition root
 ```
 
-Направление зависимостей — `Api -> Infrastructure -> Application -> Domain`.
+Направление зависимостей — `Presentation -> Infrastructure -> Application -> Domain`.
 Здесь это соглашение, а не ограничение компилятора: для системы такого
 размера отдельный проект на слой оказался лишней церемонией.
+
+Два правила держат раскладку предсказуемой: **один тип — один файл**
+(имя файла совпадает с именем типа) и **пространство имён совпадает с папкой**.
+Поэтому по имени типа сразу видно его роль и слой.
 
 Что это даёт:
 
 - **Домен ничего не знает о фреймворках.** В `Domain` нет ни EF Core, ни
   MassTransit, ни HTTP. Маппинг вынесен в `IEntityTypeConfiguration`, поэтому
   сущности свободны от атрибутов персистентности.
-- **Сценарии использования не знают о транспорте.** Они возвращают `Result`
+- **Обработчики не знают о транспорте.** Они возвращают `Result`
   с типизированной ошибкой; в HTTP-код её переводит единственное место —
   `ResultExtensions` в слое представления.
 - **Инфраструктура подключается через порты.** `IDeviceRepository`,
@@ -158,7 +182,7 @@ warmhouse/
 │   └── api/                         OpenAPI по сервисам + AsyncAPI
 └── src/
     ├── Shared/
-    │   ├── WarmHouse.Shared              Kernel/ Application/ Infrastructure/
+    │   ├── WarmHouse.Shared              Kernel/ Application/ Infrastructure/ Presentation/
     │   └── WarmHouse.Shared.Contracts    интеграционные события (общий контракт)
     ├── Gateway/WarmHouse.Gateway         YARP
     ├── Simulators/WarmHouse.TemperatureApi   имитатор датчика

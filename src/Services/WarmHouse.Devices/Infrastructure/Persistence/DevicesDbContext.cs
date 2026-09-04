@@ -1,7 +1,6 @@
 using System.Reflection;
 using Microsoft.EntityFrameworkCore;
-using WarmHouse.Devices.Domain.DeviceTypes;
-using WarmHouse.Devices.Domain.Devices;
+using WarmHouse.Devices.Domain.Entities;
 using WarmHouse.Shared.Infrastructure.Persistence;
 
 namespace WarmHouse.Devices.Infrastructure.Persistence;

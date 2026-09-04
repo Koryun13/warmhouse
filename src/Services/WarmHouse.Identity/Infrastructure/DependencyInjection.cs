@@ -1,6 +1,6 @@
 using Microsoft.Extensions.DependencyInjection;
 using WarmHouse.Identity.Application.Abstractions;
-using WarmHouse.Identity.Domain.Abstractions;
+using WarmHouse.Identity.Domain.Repositories;
 using WarmHouse.Identity.Infrastructure.Persistence.Repositories;
 using WarmHouse.Identity.Infrastructure.Security;
 

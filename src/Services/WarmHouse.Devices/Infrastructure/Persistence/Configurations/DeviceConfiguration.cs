@@ -1,6 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using WarmHouse.Devices.Domain.Devices;
+using WarmHouse.Devices.Domain.Entities;
 
 namespace WarmHouse.Devices.Infrastructure.Persistence.Configurations;
 
@@ -28,7 +28,7 @@ internal sealed class DeviceConfiguration : IEntityTypeConfiguration<Device>
         builder.Property(d => d.LastSeenAt).HasColumnName("last_seen_at");
         builder.Property(d => d.RegisteredAt).HasColumnName("registered_at");
 
-        builder.HasOne<Domain.DeviceTypes.DeviceType>()
+        builder.HasOne<DeviceType>()
             .WithMany()
             .HasForeignKey(d => d.DeviceTypeId)
             .OnDelete(DeleteBehavior.Restrict);

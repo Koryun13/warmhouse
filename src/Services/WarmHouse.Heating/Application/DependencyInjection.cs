@@ -1,5 +1,7 @@
 using Microsoft.Extensions.DependencyInjection;
-using WarmHouse.Heating.Application.UseCases;
+using WarmHouse.Heating.Application.Handlers.Commands;
+using WarmHouse.Heating.Application.Handlers.Events;
+using WarmHouse.Heating.Application.Handlers.Queries;
 
 namespace WarmHouse.Heating.Application;
 

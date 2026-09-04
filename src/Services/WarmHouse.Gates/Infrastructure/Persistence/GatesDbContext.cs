@@ -1,6 +1,6 @@
 using System.Reflection;
 using Microsoft.EntityFrameworkCore;
-using WarmHouse.Gates.Domain.Gates;
+using WarmHouse.Gates.Domain.Entities;
 using WarmHouse.Shared.Infrastructure.Persistence;
 
 namespace WarmHouse.Gates.Infrastructure.Persistence;

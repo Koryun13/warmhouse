@@ -8,17 +8,17 @@ ContainerQueue(broker, "Шина событий", "RabbitMQ", "")
 ContainerDb(db, "devices_db", "PostgreSQL", "device_types, devices, device_commands")
 System_Ext(fleet, "Устройства и протокольные шлюзы", "MQTT / HTTP / Zigbee / Modbus")
 
-Container_Boundary(api, "Presentation — папка Api/") {
+Container_Boundary(api, "Presentation — папка Presentation/") {
     Component(deviceTypeEndpoints, "DeviceTypeEndpoints", "IEndpointModule", "GET/POST /api/v1/device-types. Только привязка HTTP к сценарию использования.")
     Component(deviceEndpoints, "DeviceEndpoints", "IEndpointModule", "CRUD устройств, PATCH состояния, POST команд.")
     Component(composition, "Program", "Composition root", "Единственное место, знающее обо всех слоях.")
 }
 
 Container_Boundary(application, "Application — папка Application/") {
-    Component(registerDevice, "RegisterDeviceHandler", "Use case", "Самоподключение устройства; публикует DeviceRegistered.")
-    Component(createType, "CreateDeviceTypeHandler", "Use case", "Регистрация ранее неизвестного типа устройства.")
-    Component(issueCommand, "IssueDeviceCommandHandler", "Use case", "Приём команды; проверяет capability до постановки в очередь.")
-    Component(deliverCommand, "DeliverDeviceCommandHandler", "Use case", "Доставка команды и публикация результата.")
+    Component(registerDevice, "RegisterDeviceHandler", "Handler", "Самоподключение устройства; публикует DeviceRegistered.")
+    Component(createType, "CreateDeviceTypeHandler", "Handler", "Регистрация ранее неизвестного типа устройства.")
+    Component(issueCommand, "IssueDeviceCommandHandler", "Handler", "Приём команды; проверяет capability до постановки в очередь.")
+    Component(deliverCommand, "DeliverDeviceCommandHandler", "Handler", "Доставка команды и публикация результата.")
     Component(queriesPort, "IDeviceQueries", "Port (read side)", "Проекция в DTO одним запросом — без N+1.")
     Component(gatewayPort, "IDeviceGateway", "Port", "Абстракция протокольного шлюза.")
 }

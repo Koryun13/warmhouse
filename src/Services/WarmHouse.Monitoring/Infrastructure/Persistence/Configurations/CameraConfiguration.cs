@@ -1,6 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using WarmHouse.Monitoring.Domain.Cameras;
+using WarmHouse.Monitoring.Domain.Entities;
 
 namespace WarmHouse.Monitoring.Infrastructure.Persistence.Configurations;
 

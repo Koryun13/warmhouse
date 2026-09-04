@@ -1,6 +1,7 @@
 using Microsoft.Extensions.DependencyInjection;
-using WarmHouse.Telemetry.Application.UseCases.Measurements;
-using WarmHouse.Telemetry.Application.UseCases.Thresholds;
+using WarmHouse.Telemetry.Application.Handlers.Commands;
+using WarmHouse.Telemetry.Application.Handlers.Events;
+using WarmHouse.Telemetry.Application.Handlers.Queries;
 
 namespace WarmHouse.Telemetry.Application;
 

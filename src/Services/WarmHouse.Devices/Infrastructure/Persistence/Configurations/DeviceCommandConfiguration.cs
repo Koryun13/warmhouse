@@ -2,7 +2,7 @@ using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using WarmHouse.Devices.Domain.Devices;
+using WarmHouse.Devices.Domain.Entities;
 
 namespace WarmHouse.Devices.Infrastructure.Persistence.Configurations;
 

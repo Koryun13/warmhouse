@@ -1,4 +1,5 @@
-using WarmHouse.Telemetry.Application.Contracts;
+using WarmHouse.Telemetry.Application.Contracts.Requests;
+using WarmHouse.Telemetry.Application.Contracts.Responses;
 
 namespace WarmHouse.Telemetry.Application.Abstractions;
 

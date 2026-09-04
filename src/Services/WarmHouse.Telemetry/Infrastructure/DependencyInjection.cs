@@ -1,7 +1,8 @@
 using Microsoft.Extensions.DependencyInjection;
 using WarmHouse.Telemetry.Application.Abstractions;
-using WarmHouse.Telemetry.Domain.Abstractions;
+using WarmHouse.Telemetry.Domain.Repositories;
 using WarmHouse.Telemetry.Infrastructure.Persistence;
+using WarmHouse.Telemetry.Infrastructure.Persistence.Queries;
 using WarmHouse.Telemetry.Infrastructure.Persistence.Repositories;
 
 namespace WarmHouse.Telemetry.Infrastructure;

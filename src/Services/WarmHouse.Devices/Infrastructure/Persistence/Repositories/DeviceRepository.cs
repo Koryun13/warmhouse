@@ -1,7 +1,6 @@
 using Microsoft.EntityFrameworkCore;
-using WarmHouse.Devices.Domain.Abstractions;
-using WarmHouse.Devices.Domain.DeviceTypes;
-using WarmHouse.Devices.Domain.Devices;
+using WarmHouse.Devices.Domain.Entities;
+using WarmHouse.Devices.Domain.Repositories;
 using WarmHouse.Shared.Contracts.Enums;
 
 namespace WarmHouse.Devices.Infrastructure.Persistence.Repositories;
@@ -38,19 +37,4 @@ internal sealed class DeviceRepository(DevicesDbContext context) : IDeviceReposi
     public void Add(Device device) => context.Devices.Add(device);
 
     public void Remove(Device device) => context.Devices.Remove(device);
-}
-
-internal sealed class DeviceCommandRepository(DevicesDbContext context) : IDeviceCommandRepository
-{
-    public Task<DeviceCommand?> GetByIdAsync(Guid id, CancellationToken cancellationToken)
-        => context.Commands.FirstOrDefaultAsync(c => c.Id == id, cancellationToken);
-
-    public Task<DeviceCommand?> GetForDeviceAsync(
-        Guid deviceId,
-        Guid commandId,
-        CancellationToken cancellationToken)
-        => context.Commands.FirstOrDefaultAsync(
-            c => c.Id == commandId && c.DeviceId == deviceId, cancellationToken);
-
-    public void Add(DeviceCommand command) => context.Commands.Add(command);
 }

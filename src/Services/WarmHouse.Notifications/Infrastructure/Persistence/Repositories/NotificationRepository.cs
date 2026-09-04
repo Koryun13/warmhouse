@@ -1,6 +1,6 @@
 using Microsoft.EntityFrameworkCore;
-using WarmHouse.Notifications.Domain.Abstractions;
-using WarmHouse.Notifications.Domain.Messages;
+using WarmHouse.Notifications.Domain.Entities;
+using WarmHouse.Notifications.Domain.Repositories;
 
 namespace WarmHouse.Notifications.Infrastructure.Persistence.Repositories;
 

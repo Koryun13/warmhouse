@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
-using WarmHouse.Scenarios.Domain.Abstractions;
-using WarmHouse.Scenarios.Domain.Automation;
+using WarmHouse.Scenarios.Domain.Entities;
+using WarmHouse.Scenarios.Domain.Enums;
+using WarmHouse.Scenarios.Domain.Repositories;
 
 namespace WarmHouse.Scenarios.Infrastructure.Persistence.Repositories;
 

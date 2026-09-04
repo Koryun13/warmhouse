@@ -8,16 +8,16 @@ ContainerQueue(broker, "Шина событий", "RabbitMQ", "")
 ContainerDb(db, "telemetry_db", "PostgreSQL", "telemetry_points, threshold_rules")
 System_Ext(fleet, "Устройства и шлюзы", "")
 
-Container_Boundary(api, "Presentation — папка Api/") {
+Container_Boundary(api, "Presentation — папка Presentation/") {
     Component(telemetryEndpoints, "TelemetryEndpoints", "IEndpointModule", "POST /api/v1/telemetry, GET с фильтрами, GET /latest.")
     Component(thresholdEndpoints, "ThresholdEndpoints", "IEndpointModule", "CRUD правил контроля порогов.")
 }
 
 Container_Boundary(application, "Application — папка Application/") {
-    Component(ingest, "IngestMeasurementHandler", "Use case", "Приём по HTTP от устройств без брокера. Публикует событие, а не пишет в БД: путь обработки един для всех источников.")
-    Component(record, "RecordMeasurementHandler", "Use case", "Сохраняет измерение и проверяет применимые правила.")
-    Component(query, "QueryMeasurementsHandler, GetLatestMeasurementHandler", "Use cases", "Чтение истории и последнего значения.")
-    Component(rules, "ListThresholdRulesHandler, CreateThresholdRuleHandler, DeleteThresholdRuleHandler", "Use cases", "Управление правилами.")
+    Component(ingest, "IngestMeasurementHandler", "Handler", "Приём по HTTP от устройств без брокера. Публикует событие, а не пишет в БД: путь обработки един для всех источников.")
+    Component(record, "RecordMeasurementHandler", "Handler", "Сохраняет измерение и проверяет применимые правила.")
+    Component(query, "QueryMeasurementsHandler, GetLatestMeasurementHandler", "Handlers", "Чтение истории и последнего значения.")
+    Component(rules, "ListThresholdRulesHandler, CreateThresholdRuleHandler, DeleteThresholdRuleHandler", "Handlers", "Управление правилами.")
     Component(queriesPort, "ITelemetryQueries", "Port (read side)", "Проекция в DTO поверх временного ряда.")
 }
 

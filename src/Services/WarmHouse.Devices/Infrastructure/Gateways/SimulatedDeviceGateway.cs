@@ -1,6 +1,6 @@
 using Microsoft.Extensions.Logging;
-using WarmHouse.Devices.Application.UseCases.Devices;
-using WarmHouse.Devices.Domain.Devices;
+using WarmHouse.Devices.Application.Abstractions;
+using WarmHouse.Devices.Domain.Entities;
 using WarmHouse.Shared.Contracts.Enums;
 
 namespace WarmHouse.Devices.Infrastructure.Gateways;

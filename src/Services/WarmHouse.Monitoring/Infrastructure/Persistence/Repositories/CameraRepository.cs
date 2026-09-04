@@ -1,6 +1,6 @@
 using Microsoft.EntityFrameworkCore;
-using WarmHouse.Monitoring.Domain.Abstractions;
-using WarmHouse.Monitoring.Domain.Cameras;
+using WarmHouse.Monitoring.Domain.Entities;
+using WarmHouse.Monitoring.Domain.Repositories;
 
 namespace WarmHouse.Monitoring.Infrastructure.Persistence.Repositories;
 

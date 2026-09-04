@@ -4,7 +4,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.JsonWebTokens;
 using Microsoft.IdentityModel.Tokens;
 using WarmHouse.Identity.Application.Abstractions;
-using WarmHouse.Identity.Domain.Users;
+using WarmHouse.Identity.Domain.Entities;
 using WarmHouse.Shared.Infrastructure.Security;
 
 namespace WarmHouse.Identity.Infrastructure.Security;

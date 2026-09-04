@@ -1,5 +1,6 @@
 using Microsoft.Extensions.DependencyInjection;
-using WarmHouse.Identity.Application.UseCases;
+using WarmHouse.Identity.Application.Handlers.Commands;
+using WarmHouse.Identity.Application.Handlers.Queries;
 
 namespace WarmHouse.Identity.Application;
 

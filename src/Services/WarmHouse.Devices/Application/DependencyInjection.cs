@@ -1,6 +1,7 @@
 using Microsoft.Extensions.DependencyInjection;
-using WarmHouse.Devices.Application.UseCases.DeviceTypes;
-using WarmHouse.Devices.Application.UseCases.Devices;
+using WarmHouse.Devices.Application.Handlers.Commands;
+using WarmHouse.Devices.Application.Handlers.Events;
+using WarmHouse.Devices.Application.Handlers.Queries;
 
 namespace WarmHouse.Devices.Application;
 

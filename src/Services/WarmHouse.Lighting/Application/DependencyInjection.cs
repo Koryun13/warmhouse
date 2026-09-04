@@ -1,5 +1,7 @@
 using Microsoft.Extensions.DependencyInjection;
-using WarmHouse.Lighting.Application.UseCases;
+using WarmHouse.Lighting.Application.Handlers.Commands;
+using WarmHouse.Lighting.Application.Handlers.Events;
+using WarmHouse.Lighting.Application.Handlers.Queries;
 
 namespace WarmHouse.Lighting.Application;
 

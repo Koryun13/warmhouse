@@ -1,5 +1,7 @@
 using Microsoft.Extensions.DependencyInjection;
-using WarmHouse.Monitoring.Application.UseCases;
+using WarmHouse.Monitoring.Application.Handlers.Commands;
+using WarmHouse.Monitoring.Application.Handlers.Events;
+using WarmHouse.Monitoring.Application.Handlers.Queries;
 
 namespace WarmHouse.Monitoring.Application;
 

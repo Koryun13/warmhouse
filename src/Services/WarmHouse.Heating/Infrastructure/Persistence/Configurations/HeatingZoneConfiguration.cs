@@ -1,6 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using WarmHouse.Heating.Domain.Zones;
+using WarmHouse.Heating.Domain.Entities;
 
 namespace WarmHouse.Heating.Infrastructure.Persistence.Configurations;
 

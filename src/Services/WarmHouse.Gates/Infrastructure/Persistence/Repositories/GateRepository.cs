@@ -1,6 +1,6 @@
 using Microsoft.EntityFrameworkCore;
-using WarmHouse.Gates.Domain.Abstractions;
-using WarmHouse.Gates.Domain.Gates;
+using WarmHouse.Gates.Domain.Entities;
+using WarmHouse.Gates.Domain.Repositories;
 
 namespace WarmHouse.Gates.Infrastructure.Persistence.Repositories;
 

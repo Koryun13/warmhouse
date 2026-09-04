@@ -1,6 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using WarmHouse.Lighting.Domain.Fixtures;
+using WarmHouse.Lighting.Domain.Entities;
 
 namespace WarmHouse.Lighting.Infrastructure.Persistence.Configurations;
 

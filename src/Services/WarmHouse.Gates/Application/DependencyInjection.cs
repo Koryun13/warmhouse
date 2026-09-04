@@ -1,5 +1,7 @@
 using Microsoft.Extensions.DependencyInjection;
-using WarmHouse.Gates.Application.UseCases;
+using WarmHouse.Gates.Application.Handlers.Commands;
+using WarmHouse.Gates.Application.Handlers.Events;
+using WarmHouse.Gates.Application.Handlers.Queries;
 
 namespace WarmHouse.Gates.Application;
 

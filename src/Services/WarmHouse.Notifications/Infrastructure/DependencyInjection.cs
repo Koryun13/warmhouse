@@ -1,6 +1,6 @@
 using Microsoft.Extensions.DependencyInjection;
 using WarmHouse.Notifications.Application.Abstractions;
-using WarmHouse.Notifications.Domain.Abstractions;
+using WarmHouse.Notifications.Domain.Repositories;
 using WarmHouse.Notifications.Infrastructure.Delivery;
 using WarmHouse.Notifications.Infrastructure.Persistence.Repositories;
 

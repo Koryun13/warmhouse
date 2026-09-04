@@ -1,6 +1,6 @@
 using Microsoft.EntityFrameworkCore;
-using WarmHouse.Lighting.Domain.Abstractions;
-using WarmHouse.Lighting.Domain.Fixtures;
+using WarmHouse.Lighting.Domain.Entities;
+using WarmHouse.Lighting.Domain.Repositories;
 
 namespace WarmHouse.Lighting.Infrastructure.Persistence.Repositories;
 

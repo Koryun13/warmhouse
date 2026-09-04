@@ -1,6 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using WarmHouse.Notifications.Domain.Messages;
+using WarmHouse.Notifications.Domain.Entities;
 
 namespace WarmHouse.Notifications.Infrastructure.Persistence.Configurations;
 
