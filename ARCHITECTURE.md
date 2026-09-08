@@ -444,16 +444,26 @@ Details** с добавленными полями `trace_id` и `service` — �
    датчика**: он изображает прибор, доступный по HTTP, показания которого
    попадают в экосистему через приём телеметрии.
 
-2. **Упаковка в Docker.** Общий многостадийный
-   [`deploy/Dockerfile`](deploy/Dockerfile) (SDK → publish → `aspnet` runtime,
-   запуск от непривилегированного пользователя `$APP_UID`) параметризован через
-   `PROJECT_PATH` / `ASSEMBLY_NAME` / `APP_PORT`, поэтому один файл собирает
-   все 11 образов.
+2. **Упаковка в Docker.** У каждого из 11 разворачиваемых проектов — свой
+   многостадийный `Dockerfile` рядом с `.csproj`, например
+   [`src/Services/WarmHouse.Heating/Dockerfile`](src/Services/WarmHouse.Heating/Dockerfile)
+   (SDK → publish → `aspnet` runtime, запуск от непривилегированного
+   пользователя `$APP_UID`). Контекст сборки — корень решения: образу нужны
+   `Directory.Build.props`, централизованные версии пакетов и общие проекты
+   `WarmHouse.Shared*`, поэтому в каждом файле явные `COPY` сначала для
+   `.csproj` (кэш `dotnet restore`), затем для исходников. `docker-compose.yml`
+   не содержит параметров сборки — только `context` и `dockerfile`.
 
-   > В runtime-образ доустанавливается `libgssapi-krb5-2`: клиент RabbitMQ
-   > обращается к GSSAPI при открытии соединения, а в slim-образе этой
-   > библиотеки нет — без неё подключение к брокеру падает с ошибкой
-   > `libgssapi_krb5.so.2: cannot open shared object file`.
+   > Образы всегда Linux: оба этапа собираются на Linux-тегах `10.0-noble`
+   > (Ubuntu 24.04). Плавающие теги `10.0` на Windows-демоне разворачиваются в
+   > Nano Server, чего быть не должно; для IDE то же самое зафиксировано
+   > свойством `DockerDefaultTargetOS=Linux` в каждом `.csproj`.
+
+   > В runtime-образ сервисов, работающих с брокером, доустанавливается
+   > `libgssapi-krb5-2`: клиент RabbitMQ обращается к GSSAPI при открытии
+   > соединения, а в slim-образе этой библиотеки нет — без неё подключение
+   > падает с ошибкой `libgssapi_krb5.so.2: cannot open shared object file`.
+   > Плюс `curl` — им пользуется `HEALTHCHECK`, объявленный в самом образе.
 
 3. **PostgreSQL в docker-compose** с healthcheck и скриптом инициализации
    [`deploy/postgres/init/01-databases.sql`](deploy/postgres/init/01-databases.sql),

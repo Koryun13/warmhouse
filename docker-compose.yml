@@ -1,9 +1,5 @@
 name: warmhouse
 
-x-dotnet-build: &dotnet-build
-  context: .
-  dockerfile: deploy/Dockerfile
-
 x-service-defaults: &service-defaults
   restart: unless-stopped
   networks: [warmhouse]
@@ -64,20 +60,11 @@ services:
 
   temperature-api:
     build:
-      <<: *dotnet-build
-      args:
-        PROJECT_PATH: src/Simulators/WarmHouse.TemperatureApi/WarmHouse.TemperatureApi.csproj
-        ASSEMBLY_NAME: WarmHouse.TemperatureApi
-        APP_PORT: 8081
+      context: .
+      dockerfile: src/Simulators/WarmHouse.TemperatureApi/Dockerfile
     container_name: warmhouse-temperature-api
     ports:
       - "8081:8081"
-    healthcheck:
-      test: ["CMD-SHELL", "curl -fsS http://localhost:8081/health || exit 1"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 15s
     <<: *service-defaults
 
   # ---------------------------------------------------------------------------
@@ -86,11 +73,8 @@ services:
 
   identity:
     build:
-      <<: *dotnet-build
-      args:
-        PROJECT_PATH: src/Services/WarmHouse.Identity/WarmHouse.Identity.csproj
-        ASSEMBLY_NAME: WarmHouse.Identity
-        APP_PORT: 8080
+      context: .
+      dockerfile: src/Services/WarmHouse.Identity/Dockerfile
     container_name: warmhouse-identity
     depends_on:
       postgres:
@@ -105,11 +89,8 @@ services:
 
   devices:
     build:
-      <<: *dotnet-build
-      args:
-        PROJECT_PATH: src/Services/WarmHouse.Devices/WarmHouse.Devices.csproj
-        ASSEMBLY_NAME: WarmHouse.Devices
-        APP_PORT: 8080
+      context: .
+      dockerfile: src/Services/WarmHouse.Devices/Dockerfile
     container_name: warmhouse-devices
     depends_on:
       postgres:
@@ -126,11 +107,8 @@ services:
 
   heating:
     build:
-      <<: *dotnet-build
-      args:
-        PROJECT_PATH: src/Services/WarmHouse.Heating/WarmHouse.Heating.csproj
-        ASSEMBLY_NAME: WarmHouse.Heating
-        APP_PORT: 8080
+      context: .
+      dockerfile: src/Services/WarmHouse.Heating/Dockerfile
     container_name: warmhouse-heating
     depends_on:
       postgres:
@@ -147,11 +125,8 @@ services:
 
   lighting:
     build:
-      <<: *dotnet-build
-      args:
-        PROJECT_PATH: src/Services/WarmHouse.Lighting/WarmHouse.Lighting.csproj
-        ASSEMBLY_NAME: WarmHouse.Lighting
-        APP_PORT: 8080
+      context: .
+      dockerfile: src/Services/WarmHouse.Lighting/Dockerfile
     container_name: warmhouse-lighting
     depends_on:
       postgres:
@@ -168,11 +143,8 @@ services:
 
   gates:
     build:
-      <<: *dotnet-build
-      args:
-        PROJECT_PATH: src/Services/WarmHouse.Gates/WarmHouse.Gates.csproj
-        ASSEMBLY_NAME: WarmHouse.Gates
-        APP_PORT: 8080
+      context: .
+      dockerfile: src/Services/WarmHouse.Gates/Dockerfile
     container_name: warmhouse-gates
     depends_on:
       postgres:
@@ -189,11 +161,8 @@ services:
 
   monitoring:
     build:
-      <<: *dotnet-build
-      args:
-        PROJECT_PATH: src/Services/WarmHouse.Monitoring/WarmHouse.Monitoring.csproj
-        ASSEMBLY_NAME: WarmHouse.Monitoring
-        APP_PORT: 8080
+      context: .
+      dockerfile: src/Services/WarmHouse.Monitoring/Dockerfile
     container_name: warmhouse-monitoring
     depends_on:
       postgres:
@@ -210,11 +179,8 @@ services:
 
   telemetry:
     build:
-      <<: *dotnet-build
-      args:
-        PROJECT_PATH: src/Services/WarmHouse.Telemetry/WarmHouse.Telemetry.csproj
-        ASSEMBLY_NAME: WarmHouse.Telemetry
-        APP_PORT: 8080
+      context: .
+      dockerfile: src/Services/WarmHouse.Telemetry/Dockerfile
     container_name: warmhouse-telemetry
     depends_on:
       postgres:
@@ -231,11 +197,8 @@ services:
 
   scenarios:
     build:
-      <<: *dotnet-build
-      args:
-        PROJECT_PATH: src/Services/WarmHouse.Scenarios/WarmHouse.Scenarios.csproj
-        ASSEMBLY_NAME: WarmHouse.Scenarios
-        APP_PORT: 8080
+      context: .
+      dockerfile: src/Services/WarmHouse.Scenarios/Dockerfile
     container_name: warmhouse-scenarios
     depends_on:
       postgres:
@@ -252,11 +215,8 @@ services:
 
   notifications:
     build:
-      <<: *dotnet-build
-      args:
-        PROJECT_PATH: src/Services/WarmHouse.Notifications/WarmHouse.Notifications.csproj
-        ASSEMBLY_NAME: WarmHouse.Notifications
-        APP_PORT: 8080
+      context: .
+      dockerfile: src/Services/WarmHouse.Notifications/Dockerfile
     container_name: warmhouse-notifications
     depends_on:
       postgres:
@@ -277,11 +237,8 @@ services:
 
   gateway:
     build:
-      <<: *dotnet-build
-      args:
-        PROJECT_PATH: src/Gateway/WarmHouse.Gateway/WarmHouse.Gateway.csproj
-        ASSEMBLY_NAME: WarmHouse.Gateway
-        APP_PORT: 8080
+      context: .
+      dockerfile: src/Gateway/WarmHouse.Gateway/Dockerfile
     container_name: warmhouse-gateway
     depends_on:
       - identity

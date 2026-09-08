@@ -122,7 +122,8 @@ dotnet build WarmHouse.slnx
 ## Запуск из Rider
 
 В решении есть папки `Solution Items`, `deploy` и `docs` — `docker-compose.yml`,
-`Dockerfile`, скрипты и диаграммы видны прямо в дереве решения.
+скрипты и диаграммы видны прямо в дереве решения. `Dockerfile` каждого сервиса
+лежит рядом с его проектом, поэтому виден в дереве этого проекта.
 
 Готовые конфигурации запуска лежат в `.run/` и подхватываются Rider автоматически:
 
@@ -173,7 +174,6 @@ warmhouse/
 ├── Directory.Packages.props         централизованные версии пакетов
 ├── docker-compose.yml
 ├── deploy/
-│   ├── Dockerfile                   один многостадийный образ на все сервисы
 │   ├── smoke-test.sh                сквозная проверка экосистемы
 │   └── postgres/init/               создание баз данных сервисов
 ├── docs/
@@ -191,6 +191,22 @@ warmhouse/
         ├── WarmHouse.Lighting/  WarmHouse.Gates/    WarmHouse.Monitoring/
         └── WarmHouse.Telemetry/ WarmHouse.Scenarios/ WarmHouse.Notifications/
 ```
+
+У каждого разворачиваемого проекта — 9 сервисов, шлюз и имитатор датчика —
+свой `Dockerfile` рядом с `.csproj`. Контекст сборки всегда корень решения:
+образу нужны `Directory.Build.props`, централизованные версии пакетов и общие
+проекты `WarmHouse.Shared*`. `docker-compose.yml` только указывает на нужный
+файл и не хранит параметров сборки:
+
+```bash
+docker build -f src/Services/WarmHouse.Heating/Dockerfile -t warmhouse/heating .
+docker compose build heating          # то же самое через compose
+```
+
+Образы всегда Linux: оба этапа собираются на тегах `10.0-noble`
+(Ubuntu 24.04), а не на плавающих `10.0`, которые на Windows-демоне
+разворачиваются в Nano Server. Для IDE то же самое зафиксировано свойством
+`DockerDefaultTargetOS=Linux` в каждом `.csproj`.
 
 ## Архитектурные решения
 

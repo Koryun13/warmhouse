@@ -9,7 +9,6 @@
     <File Path=".gitignore" />
   </Folder>
   <Folder Name="/deploy/">
-    <File Path="deploy/Dockerfile" />
     <File Path="deploy/smoke-test.sh" />
     <File Path="deploy/postgres/init/01-databases.sql" />
   </Folder>

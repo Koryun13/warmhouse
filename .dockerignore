@@ -1,8 +1,14 @@
+# The build context is the solution root; only the sources and the MSBuild
+# props files are needed to publish a service image.
 **/bin/
 **/obj/
 **/.vs/
 **/.vscode/
 **/*.user
+.git/
+.run/
 docs/
-deploy/postgres/
+deploy/
 README.md
+ARCHITECTURE.md
+docker-compose.yml
