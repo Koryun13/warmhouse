@@ -1,5 +1,3 @@
-# syntax=docker/dockerfile:1
-#
 # API gateway — the single entry point (YARP).
 #
 # The build context is the solution root, because Directory.Build.props and the

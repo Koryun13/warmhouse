@@ -1,5 +1,3 @@
-# syntax=docker/dockerfile:1
-#
 # Devices service — device registry and commands.
 #
 # The build context is the solution root, because Directory.Build.props and the

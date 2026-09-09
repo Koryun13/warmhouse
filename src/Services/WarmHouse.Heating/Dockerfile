@@ -1,5 +1,3 @@
-# syntax=docker/dockerfile:1
-#
 # Heating service — zones and setpoints.
 #
 # The build context is the solution root, because Directory.Build.props and the
