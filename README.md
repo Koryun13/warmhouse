@@ -102,7 +102,7 @@ curl -sS "http://localhost:8000/api/v1/houses" -H "Authorization: Bearer $TOKEN"
 ```bash
 docker compose up -d --build      # сборка и запуск всех контейнеров
 docker compose ps                 # состояние
-bash deploy/smoke-test.sh         # сквозная проверка экосистемы
+bash deploy/smoke-test.sh         # сквозные тесты; ненулевой код возврата при провале
 docker compose down -v            # остановка и очистка данных
 ```
 
@@ -112,6 +112,11 @@ docker compose down -v            # остановка и очистка дан�
 > базу. Если тома остались от сборки без outbox, поднимайте стек после
 > `docker compose down -v` — иначе таблиц `OutboxMessage`, `OutboxState` и
 > `InboxState` в базе не окажется.
+>
+> Забыть об этом нельзя: на старте сервис сверяет таблицы со своей моделью и,
+> обнаружив недостающие, падает с `SchemaOutOfDateException`, перечисляя их.
+> Раньше он поднимался «здоровым», а расхождение всплывало как 500 на первом
+> же запросе к недостающей таблице.
 
 Локальная сборка без Docker:
 
@@ -131,7 +136,7 @@ dotnet build WarmHouse.slnx
 |---|---|
 | **docker-compose up** | Поднимает весь стек (13 контейнеров) |
 | **docker-compose infrastructure only** | Поднимает только postgres, rabbitmq и имитатор датчика |
-| **smoke test** | Прогоняет `deploy/smoke-test.sh` через шлюз |
+| **smoke test** | Прогоняет `deploy/smoke-test.sh` — 50 проверок через шлюз |
 
 Чтобы отлаживать сервис прямо из IDE:
 
@@ -174,7 +179,7 @@ warmhouse/
 ├── Directory.Packages.props         централизованные версии пакетов
 ├── docker-compose.yml
 ├── deploy/
-│   ├── smoke-test.sh                сквозная проверка экосистемы
+│   ├── smoke-test.sh                сквозные тесты со сверками
 │   └── postgres/init/               создание баз данных сервисов
 ├── docs/
 │   ├── c4/                          контекст, контейнеры, компоненты, код

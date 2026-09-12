@@ -111,6 +111,7 @@ _ReSharper*/
 ## AI assistants and code-gen tooling
 ## ---------------------------------------------------------------------------
 .claude/
+CLAUDE.md
 CLAUDE.local.md
 .cursor/
 .cursorignore
