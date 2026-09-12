@@ -1,0 +1,148 @@
+{
+  "openapi": "3.1.1",
+  "info": {
+    "title": "Video Monitoring",
+    "version": "v1"
+  },
+  "servers": [
+    {
+      "url": "http://localhost:8060/"
+    }
+  ],
+  "paths": {
+    "/api/v1/monitoring/cameras": {
+      "get": {
+        "tags": [
+          "Monitoring"
+        ],
+        "summary": "Cameras of a house",
+        "operationId": "ListCameras",
+        "parameters": [
+          {
+            "name": "houseId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/monitoring/cameras/{id}": {
+      "get": {
+        "tags": [
+          "Monitoring"
+        ],
+        "summary": "State of a camera",
+        "operationId": "GetCamera",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/monitoring/cameras/{id}/stream": {
+      "get": {
+        "tags": [
+          "Monitoring"
+        ],
+        "summary": "Issue a short-lived stream ticket",
+        "operationId": "GetCameraStream",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/monitoring/cameras/{id}/recording": {
+      "post": {
+        "tags": [
+          "Monitoring"
+        ],
+        "summary": "Start or stop recording",
+        "operationId": "SetCameraRecording",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetRecordingRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "SetRecordingRequest": {
+        "required": [
+          "enabled",
+          "requested_by"
+        ],
+        "type": "object",
+        "properties": {
+          "enabled": {
+            "type": "boolean"
+          },
+          "requested_by": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      }
+    }
+  },
+  "tags": [
+    {
+      "name": "Monitoring"
+    }
+  ]
+}

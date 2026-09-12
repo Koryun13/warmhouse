@@ -1,0 +1,51 @@
+<Solution>
+  <Folder Name="/Solution Items/">
+    <File Path="docker-compose.yml" />
+    <File Path="Directory.Build.props" />
+    <File Path="Directory.Packages.props" />
+    <File Path="README.md" />
+    <File Path="ARCHITECTURE.md" />
+    <File Path=".dockerignore" />
+    <File Path=".gitignore" />
+  </Folder>
+  <Folder Name="/deploy/">
+    <File Path="deploy/smoke-test.sh" />
+    <File Path="deploy/postgres/init/01-databases.sql" />
+  </Folder>
+  <Folder Name="/docs/">
+    <File Path="docs/api/warmhouse-events.asyncapi.yaml" />
+    <File Path="docs/er/er-diagram.puml" />
+  </Folder>
+  <Folder Name="/docs/c4/">
+    <File Path="docs/c4/01-context-as-is.puml" />
+    <File Path="docs/c4/02-context-to-be.puml" />
+    <File Path="docs/c4/03-containers-to-be.puml" />
+    <File Path="docs/c4/04-components-devices.puml" />
+    <File Path="docs/c4/05-components-heating.puml" />
+    <File Path="docs/c4/06-components-telemetry.puml" />
+    <File Path="docs/c4/07-code-device-model.puml" />
+    <File Path="docs/c4/08-code-sequence-autoheating.puml" />
+  </Folder>
+  <Folder Name="/src/" />
+  <Folder Name="/src/Gateway/">
+    <Project Path="src/Gateway/WarmHouse.Gateway/WarmHouse.Gateway.csproj" />
+  </Folder>
+  <Folder Name="/src/Services/">
+    <Project Path="src/Services/WarmHouse.Devices/WarmHouse.Devices.csproj" />
+    <Project Path="src/Services/WarmHouse.Gates/WarmHouse.Gates.csproj" />
+    <Project Path="src/Services/WarmHouse.Heating/WarmHouse.Heating.csproj" />
+    <Project Path="src/Services/WarmHouse.Identity/WarmHouse.Identity.csproj" />
+    <Project Path="src/Services/WarmHouse.Lighting/WarmHouse.Lighting.csproj" />
+    <Project Path="src/Services/WarmHouse.Monitoring/WarmHouse.Monitoring.csproj" />
+    <Project Path="src/Services/WarmHouse.Notifications/WarmHouse.Notifications.csproj" />
+    <Project Path="src/Services/WarmHouse.Scenarios/WarmHouse.Scenarios.csproj" />
+    <Project Path="src/Services/WarmHouse.Telemetry/WarmHouse.Telemetry.csproj" />
+  </Folder>
+  <Folder Name="/src/Shared/">
+    <Project Path="src/Shared/WarmHouse.Shared.Contracts/WarmHouse.Shared.Contracts.csproj" />
+    <Project Path="src/Shared/WarmHouse.Shared/WarmHouse.Shared.csproj" />
+  </Folder>
+  <Folder Name="/src/Simulators/">
+    <Project Path="src/Simulators/WarmHouse.TemperatureApi/WarmHouse.TemperatureApi.csproj" />
+  </Folder>
+</Solution>

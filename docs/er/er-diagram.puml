@@ -1,0 +1,221 @@
+@startuml ER_WarmHouse
+title ER-диаграмма экосистемы «Тёплый дом» (To-Be)
+
+hide circle
+skinparam linetype ortho
+
+' Пунктирные границы = границы владения данными.
+' Каждый прямоугольник-пакет — отдельная база данных своего микросервиса.
+' Связи между базами логические: физических внешних ключей между ними нет,
+' согласованность обеспечивается событиями.
+
+package "identity_db — Пользователи и дома" #E8F4FD {
+    entity "users" as users {
+        * **id** : uuid <<PK>>
+        --
+        * email : varchar(200) <<UQ>>
+        * display_name : varchar(150)
+        * password_hash : varchar(400)
+        * created_at : timestamptz
+    }
+
+    entity "houses" as houses {
+        * **id** : uuid <<PK>>
+        --
+        * owner_id : uuid <<FK users.id>>
+        * name : varchar(150)
+        address : varchar(300)
+        * time_zone : varchar(60)
+        * created_at : timestamptz
+    }
+
+    entity "house_members" as members {
+        * **house_id** : uuid <<PK, FK houses.id>>
+        * **user_id** : uuid <<PK, FK users.id>>
+        --
+        * role : varchar(20)
+        * granted_at : timestamptz
+    }
+}
+
+package "devices_db — Управление устройствами" #FDF3E8 {
+    entity "device_types" as dtypes {
+        * **id** : uuid <<PK>>
+        --
+        * code : varchar(120) <<UQ>>
+        * name : varchar(150)
+        manufacturer : varchar(150)
+        * category : varchar(40)
+        * protocol : varchar(40)
+        * capabilities : text[]
+        * created_at : timestamptz
+    }
+
+    entity "devices" as devices {
+        * **id** : uuid <<PK>>
+        --
+        * device_type_id : uuid <<FK device_types.id>>
+        * house_id : uuid <<логич. FK houses.id>>
+        * owner_id : uuid <<логич. FK users.id>>
+        * serial_number : varchar(120) <<UQ>>
+        * name : varchar(150)
+        location : varchar(120)
+        * status : varchar(40)
+        firmware : varchar(60)
+        last_seen_at : timestamptz
+        * registered_at : timestamptz
+        settings : jsonb
+    }
+
+    entity "device_commands" as commands {
+        * **id** : uuid <<PK>>
+        --
+        * device_id : uuid <<FK devices.id>>
+        * capability : varchar(120)
+        * action : varchar(120)
+        payload : jsonb
+        * status : varchar(40)
+        error : varchar(500)
+        * correlation_id : uuid
+        * requested_by : uuid
+        * requested_at : timestamptz
+        completed_at : timestamptz
+    }
+}
+
+package "telemetry_db — Телеметрия" #E8FDEC {
+    entity "telemetry_points" as points {
+        * **id** : bigserial <<PK>>
+        --
+        * device_id : uuid <<логич. FK devices.id>>
+        * house_id : uuid
+        * metric : varchar(80)
+        * value : double precision
+        unit : varchar(20)
+        * measured_at : timestamptz
+        * received_at : timestamptz
+    }
+
+    entity "threshold_rules" as rules {
+        * **id** : uuid <<PK>>
+        --
+        * house_id : uuid
+        device_id : uuid
+        * metric : varchar(80)
+        * comparison : varchar(10)
+        * threshold : double precision
+        * enabled : boolean
+        * created_at : timestamptz
+    }
+}
+
+package "Доменные сервисы (проекции устройств)" #FDE8F4 {
+    entity "heating_zones" as zones {
+        * **id** : uuid <<PK>>
+        --
+        * device_id : uuid <<UQ, логич. FK>>
+        * house_id : uuid
+        * name : varchar(150)
+        location : varchar(120)
+        * target_temperature : double precision
+        current_temperature : double precision
+        measured_at : timestamptz
+        * mode : varchar(20)
+        * is_heating : boolean
+        * updated_at : timestamptz
+    }
+
+    entity "light_fixtures" as lights {
+        * **id** : uuid <<PK>>
+        --
+        * device_id : uuid <<UQ, логич. FK>>
+        * house_id : uuid
+        * name : varchar(150)
+        * is_on : boolean
+        * brightness : int
+        * is_dimmable : boolean
+    }
+
+    entity "gates" as gates {
+        * **id** : uuid <<PK>>
+        --
+        * device_id : uuid <<UQ, логич. FK>>
+        * house_id : uuid
+        * name : varchar(150)
+        * state : varchar(20)
+        * supports_lock : boolean
+        pending_command_id : uuid
+        last_operated_at : timestamptz
+    }
+
+    entity "cameras" as cameras {
+        * **id** : uuid <<PK>>
+        --
+        * device_id : uuid <<UQ, логич. FK>>
+        * house_id : uuid
+        * name : varchar(150)
+        stream_url : varchar(500)
+        * is_recording : boolean
+        * is_online : boolean
+        last_snapshot_at : timestamptz
+    }
+}
+
+package "scenarios_db / notifications_db" #F4E8FD {
+    entity "scenarios" as scenarios {
+        * **id** : uuid <<PK>>
+        --
+        * house_id : uuid
+        * name : varchar(150)
+        * enabled : boolean
+        * trigger_kind : varchar(30)
+        trigger_metric : varchar(80)
+        trigger_device_id : uuid
+        * actions : jsonb
+        * created_at : timestamptz
+        last_triggered_at : timestamptz
+    }
+
+    entity "notifications" as notifications {
+        * **id** : uuid <<PK>>
+        --
+        * recipient_id : uuid <<логич. FK users.id>>
+        * channel : varchar(30)
+        * subject : varchar(200)
+        * body : varchar(2000)
+        * status : varchar(20)
+        * is_read : boolean
+        * created_at : timestamptz
+        sent_at : timestamptz
+    }
+}
+
+' --- Связи внутри границ (реальные внешние ключи) ---
+users ||--o{ houses : "владеет (1:N)"
+users ||--o{ members : ""
+houses ||--o{ members : "доступ (N:M через house_members)"
+dtypes ||--o{ devices : "определяет тип (1:N)"
+devices ||--o{ commands : "получает команды (1:N)"
+
+' --- Логические связи между сервисами (через события, без FK) ---
+houses ||..o{ devices : "содержит (1:N)"
+devices ||..o{ points : "порождает телеметрию (1:N)"
+devices ||..|| zones : "проекция 1:1"
+devices ||..|| lights : "проекция 1:1"
+devices ||..|| gates : "проекция 1:1"
+devices ||..|| cameras : "проекция 1:1"
+houses ||..o{ rules : "правила порогов (1:N)"
+houses ||..o{ scenarios : "сценарии (1:N)"
+users ||..o{ notifications : "получает (1:N)"
+
+legend right
+  |= Обозначение |= Смысл |
+  | ─── сплошная | внешний ключ внутри одной БД |
+  | ┈┈┈ пунктир | логическая связь между БД разных |
+  |  | сервисов; целостность — через события |
+  | 1:N | один-ко-многим |
+  | N:M | многие-ко-многим (house_members) |
+  | 1:1 | проекция устройства в доменном сервисе |
+endlegend
+
+@enduml

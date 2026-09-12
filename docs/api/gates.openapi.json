@@ -1,0 +1,189 @@
+{
+  "openapi": "3.1.1",
+  "info": {
+    "title": "Gate Control",
+    "version": "v1"
+  },
+  "servers": [
+    {
+      "url": "http://localhost:8050/"
+    }
+  ],
+  "paths": {
+    "/api/v1/gates": {
+      "get": {
+        "tags": [
+          "Gates"
+        ],
+        "summary": "Gates of a house",
+        "operationId": "ListGates",
+        "parameters": [
+          {
+            "name": "houseId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/gates/{id}": {
+      "get": {
+        "tags": [
+          "Gates"
+        ],
+        "summary": "State of a gate",
+        "operationId": "GetGate",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/gates/{id}/open": {
+      "post": {
+        "tags": [
+          "Gates"
+        ],
+        "summary": "Open a gate",
+        "operationId": "OpenGate",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GateOperationRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/gates/{id}/close": {
+      "post": {
+        "tags": [
+          "Gates"
+        ],
+        "summary": "Close a gate",
+        "operationId": "CloseGate",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GateOperationRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/gates/{id}/lock": {
+      "post": {
+        "tags": [
+          "Gates"
+        ],
+        "summary": "Lock a closed gate",
+        "operationId": "LockGate",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GateOperationRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "GateOperationRequest": {
+        "required": [
+          "requested_by"
+        ],
+        "type": "object",
+        "properties": {
+          "requested_by": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      }
+    }
+  },
+  "tags": [
+    {
+      "name": "Gates"
+    }
+  ]
+}

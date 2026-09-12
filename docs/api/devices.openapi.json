@@ -1,0 +1,430 @@
+{
+  "openapi": "3.1.1",
+  "info": {
+    "title": "Device Management",
+    "version": "v1"
+  },
+  "servers": [
+    {
+      "url": "http://localhost:8020/"
+    }
+  ],
+  "paths": {
+    "/api/v1/devices": {
+      "get": {
+        "tags": [
+          "Devices"
+        ],
+        "summary": "Devices of a house",
+        "operationId": "ListDevices",
+        "parameters": [
+          {
+            "name": "houseId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "category",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/DeviceCategory"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Devices"
+        ],
+        "summary": "Connect a device through self-service",
+        "operationId": "RegisterDevice",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegisterDeviceRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/devices/{id}": {
+      "get": {
+        "tags": [
+          "Devices"
+        ],
+        "summary": "Device details",
+        "operationId": "GetDevice",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Devices"
+        ],
+        "summary": "Disconnect a device",
+        "operationId": "DecommissionDevice",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/devices/{id}/status": {
+      "patch": {
+        "tags": [
+          "Devices"
+        ],
+        "summary": "Report device reachability",
+        "operationId": "UpdateDeviceStatus",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateDeviceStatusRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/devices/{id}/commands": {
+      "post": {
+        "tags": [
+          "Devices"
+        ],
+        "summary": "Send a command to a device",
+        "operationId": "SendDeviceCommand",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/IssueCommandRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/devices/{id}/commands/{commandId}": {
+      "get": {
+        "tags": [
+          "Devices"
+        ],
+        "summary": "Command delivery status",
+        "operationId": "GetDeviceCommand",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "commandId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/device-types": {
+      "get": {
+        "tags": [
+          "DeviceTypes"
+        ],
+        "summary": "Supported device classes",
+        "operationId": "ListDeviceTypes",
+        "parameters": [
+          {
+            "name": "category",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/DeviceCategory"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "DeviceTypes"
+        ],
+        "summary": "Register a previously unknown device type",
+        "operationId": "CreateDeviceType",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateDeviceTypeRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "ConnectivityProtocol": {
+        "enum": [
+          "http",
+          "mqtt",
+          "zigbee",
+          "z_wave",
+          "modbus"
+        ]
+      },
+      "CreateDeviceTypeRequest": {
+        "required": [
+          "code",
+          "name",
+          "manufacturer",
+          "category",
+          "protocol",
+          "capabilities"
+        ],
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "manufacturer": {
+            "type": "string"
+          },
+          "category": {
+            "$ref": "#/components/schemas/DeviceCategory"
+          },
+          "protocol": {
+            "$ref": "#/components/schemas/ConnectivityProtocol"
+          },
+          "capabilities": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "DeviceCategory": {
+        "enum": [
+          "unknown",
+          "heating",
+          "lighting",
+          "gate",
+          "camera",
+          "sensor",
+          null
+        ]
+      },
+      "DeviceStatus": {
+        "enum": [
+          "unknown",
+          "offline",
+          "online",
+          "faulted",
+          "maintenance"
+        ]
+      },
+      "IssueCommandRequest": {
+        "required": [
+          "capability",
+          "action",
+          "payload",
+          "requested_by"
+        ],
+        "type": "object",
+        "properties": {
+          "capability": {
+            "type": "string"
+          },
+          "action": {
+            "type": "string"
+          },
+          "payload": {
+            "type": [
+              "null",
+              "object"
+            ],
+            "additionalProperties": {
+              "type": "string"
+            }
+          },
+          "requested_by": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      },
+      "RegisterDeviceRequest": {
+        "required": [
+          "house_id",
+          "owner_id",
+          "device_type_code",
+          "serial_number",
+          "name",
+          "location",
+          "firmware"
+        ],
+        "type": "object",
+        "properties": {
+          "house_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "owner_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "device_type_code": {
+            "type": "string"
+          },
+          "serial_number": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "location": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "firmware": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "UpdateDeviceStatusRequest": {
+        "required": [
+          "status",
+          "reason"
+        ],
+        "type": "object",
+        "properties": {
+          "status": {
+            "$ref": "#/components/schemas/DeviceStatus"
+          },
+          "reason": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      }
+    }
+  },
+  "tags": [
+    {
+      "name": "Devices"
+    },
+    {
+      "name": "DeviceTypes"
+    }
+  ]
+}

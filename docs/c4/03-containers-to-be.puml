@@ -1,0 +1,91 @@
+@startuml C4_Containers_ToBe
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+LAYOUT_TOP_DOWN()
+
+title Диаграмма контейнеров (C4, уровень 2) — экосистема «Тёплый дом», To-Be
+
+Person(resident, "Житель дома")
+Person(support, "Оператор поддержки")
+
+System_Boundary(ecosystem, "Экосистема «Тёплый дом»") {
+
+    Container(spa, "Веб-приложение", "SPA", "Личный кабинет: подключение устройств, управление, сценарии, телеметрия.")
+
+    Container(gateway, "API Gateway", ".NET 10, YARP", "Единая точка входа. Маршрутизация, таймауты, единый контур наблюдаемости. Порт 8000.")
+
+    Container(identity, "Пользователи и дома", ".NET 10, ASP.NET Core", "Регистрация, выпуск JWT, дома и права доступа к ним.")
+    ContainerDb(identityDb, "identity_db", "PostgreSQL", "users, houses, house_members")
+
+    Container(devices, "Управление устройствами", ".NET 10, ASP.NET Core", "Каталог типов устройств, реестр экземпляров, доставка команд. Владеет реестром устройств.")
+    ContainerDb(devicesDb, "devices_db", "PostgreSQL", "device_types, devices, device_commands")
+
+    Container(heating, "Управление отоплением", ".NET 10, ASP.NET Core", "Зоны отопления, целевая температура, автоподдержание по телеметрии.")
+    ContainerDb(heatingDb, "heating_db", "PostgreSQL", "heating_zones")
+
+    Container(lighting, "Управление освещением", ".NET 10, ASP.NET Core", "Светильники, включение/выключение, яркость.")
+    ContainerDb(lightingDb, "lighting_db", "PostgreSQL", "light_fixtures")
+
+    Container(gates, "Управление воротами", ".NET 10, ASP.NET Core", "Открытие, закрытие, блокировка. Отслеживает переходные состояния.")
+    ContainerDb(gatesDb, "gates_db", "PostgreSQL", "gates")
+
+    Container(monitoring, "Видеонаблюдение", ".NET 10, ASP.NET Core", "Камеры, короткоживущие ссылки на поток, запись.")
+    ContainerDb(monitoringDb, "monitoring_db", "PostgreSQL", "cameras")
+
+    Container(telemetry, "Телеметрия", ".NET 10, ASP.NET Core", "Приём и хранение измерений, контроль порогов.")
+    ContainerDb(telemetryDb, "telemetry_db", "PostgreSQL", "telemetry_points, threshold_rules")
+
+    Container(scenarios, "Сценарии автоматизации", ".NET 10, ASP.NET Core", "Пользовательские правила «условие → действия».")
+    ContainerDb(scenariosDb, "scenarios_db", "PostgreSQL", "scenarios (шаги в jsonb)")
+
+    Container(notifications, "Уведомления", ".NET 10, ASP.NET Core", "Журнал и доставка уведомлений.")
+    ContainerDb(notificationsDb, "notifications_db", "PostgreSQL", "notifications")
+
+    Container(tempApi, "Temperature API (имитатор датчика)", ".NET 10, ASP.NET Core", "Стенд-ин партнёрского датчика температуры: отдаёт показание по HTTP. Порт 8081.")
+
+    ContainerQueue(broker, "Шина событий", "RabbitMQ", "DeviceRegistered, TelemetryReported, DeviceCommandRequested/Completed, TelemetryThresholdBreached, NotificationRequested")
+}
+
+System_Ext(deviceFleet, "Устройства и шлюзы", "Термостаты, светильники, ворота, камеры, датчики")
+System_Ext(pushProvider, "Провайдер уведомлений", "Push / e-mail / SMS")
+
+Rel(resident, spa, "Использует", "HTTPS")
+Rel(support, spa, "Использует", "HTTPS")
+Rel(spa, gateway, "Вызывает API", "HTTPS/JSON")
+
+Rel(gateway, identity, "Маршрутизирует /api/v1/auth, /users, /houses", "HTTP")
+Rel(gateway, devices, "Маршрутизирует /api/v1/devices, /device-types", "HTTP")
+Rel(gateway, heating, "Маршрутизирует /api/v1/heating", "HTTP")
+Rel(gateway, lighting, "Маршрутизирует /api/v1/lighting", "HTTP")
+Rel(gateway, gates, "Маршрутизирует /api/v1/gates", "HTTP")
+Rel(gateway, monitoring, "Маршрутизирует /api/v1/monitoring", "HTTP")
+Rel(gateway, telemetry, "Маршрутизирует /api/v1/telemetry", "HTTP")
+Rel(gateway, scenarios, "Маршрутизирует /api/v1/scenarios", "HTTP")
+Rel(gateway, notifications, "Маршрутизирует /api/v1/notifications", "HTTP")
+
+Rel(identity, identityDb, "Читает/пишет", "TCP 5432")
+Rel(devices, devicesDb, "Читает/пишет", "TCP 5432")
+Rel(heating, heatingDb, "Читает/пишет", "TCP 5432")
+Rel(lighting, lightingDb, "Читает/пишет", "TCP 5432")
+Rel(gates, gatesDb, "Читает/пишет", "TCP 5432")
+Rel(monitoring, monitoringDb, "Читает/пишет", "TCP 5432")
+Rel(telemetry, telemetryDb, "Читает/пишет", "TCP 5432")
+Rel(scenarios, scenariosDb, "Читает/пишет", "TCP 5432")
+Rel(notifications, notificationsDb, "Читает/пишет", "TCP 5432")
+
+Rel(devices, broker, "Публикует DeviceRegistered, DeviceStatusChanged, DeviceCommandCompleted; читает DeviceCommandRequested", "AMQP")
+Rel(telemetry, broker, "Читает TelemetryReported; публикует TelemetryThresholdBreached", "AMQP")
+Rel(heating, broker, "Читает DeviceRegistered, TelemetryReported; публикует DeviceCommandRequested", "AMQP")
+Rel(lighting, broker, "Читает DeviceRegistered; публикует DeviceCommandRequested", "AMQP")
+Rel(gates, broker, "Читает DeviceRegistered, DeviceCommandCompleted; публикует DeviceCommandRequested", "AMQP")
+Rel(monitoring, broker, "Читает DeviceRegistered, DeviceStatusChanged; публикует DeviceCommandRequested", "AMQP")
+Rel(scenarios, broker, "Читает TelemetryThresholdBreached; публикует DeviceCommandRequested, NotificationRequested", "AMQP")
+Rel(notifications, broker, "Читает NotificationRequested", "AMQP")
+
+Rel(deviceFleet, telemetry, "Присылают измерения", "MQTT / HTTPS")
+Rel(devices, deviceFleet, "Доставляет команды через шлюз протокола", "MQTT / HTTPS / Zigbee")
+Rel(notifications, pushProvider, "Отправляет сообщения", "HTTPS")
+Rel(tempApi, telemetry, "Отдаёт показания имитируемого датчика", "HTTP")
+
+SHOW_LEGEND()
+@enduml

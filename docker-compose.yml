@@ -1,0 +1,262 @@
+name: warmhouse
+
+x-service-defaults: &service-defaults
+  restart: unless-stopped
+  networks: [warmhouse]
+
+# Every service validates the access token itself, so they all read the same
+# issuer, audience and signing key. Override JWT_SIGNING_KEY outside development.
+x-jwt: &jwt
+  JWT_ISSUER: warmhouse-identity
+  JWT_AUDIENCE: warmhouse
+  JWT_SIGNING_KEY: ${JWT_SIGNING_KEY:-dev-only-signing-key-change-me-in-production-32b}
+
+services:
+
+  # ---------------------------------------------------------------------------
+  # Infrastructure
+  # ---------------------------------------------------------------------------
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: warmhouse-postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: warmhouse
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./deploy/postgres/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+    <<: *service-defaults
+
+  rabbitmq:
+    image: rabbitmq:3.13-management-alpine
+    container_name: warmhouse-rabbitmq
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "check_running"]
+      interval: 10s
+      timeout: 10s
+      retries: 10
+      start_period: 20s
+    <<: *service-defaults
+
+  # ---------------------------------------------------------------------------
+  # Simulated partner device (assignment 5)
+  # ---------------------------------------------------------------------------
+
+  temperature-api:
+    build:
+      context: .
+      dockerfile: src/Simulators/WarmHouse.TemperatureApi/Dockerfile
+    container_name: warmhouse-temperature-api
+    ports:
+      - "8081:8081"
+    <<: *service-defaults
+
+  # ---------------------------------------------------------------------------
+  # Microservices
+  # ---------------------------------------------------------------------------
+
+  identity:
+    build:
+      context: .
+      dockerfile: src/Services/WarmHouse.Identity/Dockerfile
+    container_name: warmhouse-identity
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      <<: *jwt
+      DATABASE_URL: postgres://postgres:postgres@postgres:5432/warmhouse_identity
+      RABBITMQ_HOST: rabbitmq
+    ports:
+      - "8010:8080"
+    <<: *service-defaults
+
+  devices:
+    build:
+      context: .
+      dockerfile: src/Services/WarmHouse.Devices/Dockerfile
+    container_name: warmhouse-devices
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    environment:
+      <<: *jwt
+      DATABASE_URL: postgres://postgres:postgres@postgres:5432/warmhouse_devices
+      RABBITMQ_HOST: rabbitmq
+    ports:
+      - "8020:8080"
+    <<: *service-defaults
+
+  heating:
+    build:
+      context: .
+      dockerfile: src/Services/WarmHouse.Heating/Dockerfile
+    container_name: warmhouse-heating
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    environment:
+      <<: *jwt
+      DATABASE_URL: postgres://postgres:postgres@postgres:5432/warmhouse_heating
+      RABBITMQ_HOST: rabbitmq
+    ports:
+      - "8030:8080"
+    <<: *service-defaults
+
+  lighting:
+    build:
+      context: .
+      dockerfile: src/Services/WarmHouse.Lighting/Dockerfile
+    container_name: warmhouse-lighting
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    environment:
+      <<: *jwt
+      DATABASE_URL: postgres://postgres:postgres@postgres:5432/warmhouse_lighting
+      RABBITMQ_HOST: rabbitmq
+    ports:
+      - "8040:8080"
+    <<: *service-defaults
+
+  gates:
+    build:
+      context: .
+      dockerfile: src/Services/WarmHouse.Gates/Dockerfile
+    container_name: warmhouse-gates
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    environment:
+      <<: *jwt
+      DATABASE_URL: postgres://postgres:postgres@postgres:5432/warmhouse_gates
+      RABBITMQ_HOST: rabbitmq
+    ports:
+      - "8050:8080"
+    <<: *service-defaults
+
+  monitoring:
+    build:
+      context: .
+      dockerfile: src/Services/WarmHouse.Monitoring/Dockerfile
+    container_name: warmhouse-monitoring
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    environment:
+      <<: *jwt
+      DATABASE_URL: postgres://postgres:postgres@postgres:5432/warmhouse_monitoring
+      RABBITMQ_HOST: rabbitmq
+    ports:
+      - "8060:8080"
+    <<: *service-defaults
+
+  telemetry:
+    build:
+      context: .
+      dockerfile: src/Services/WarmHouse.Telemetry/Dockerfile
+    container_name: warmhouse-telemetry
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    environment:
+      <<: *jwt
+      DATABASE_URL: postgres://postgres:postgres@postgres:5432/warmhouse_telemetry
+      RABBITMQ_HOST: rabbitmq
+    ports:
+      - "8070:8080"
+    <<: *service-defaults
+
+  scenarios:
+    build:
+      context: .
+      dockerfile: src/Services/WarmHouse.Scenarios/Dockerfile
+    container_name: warmhouse-scenarios
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    environment:
+      <<: *jwt
+      DATABASE_URL: postgres://postgres:postgres@postgres:5432/warmhouse_scenarios
+      RABBITMQ_HOST: rabbitmq
+    ports:
+      - "8075:8080"
+    <<: *service-defaults
+
+  notifications:
+    build:
+      context: .
+      dockerfile: src/Services/WarmHouse.Notifications/Dockerfile
+    container_name: warmhouse-notifications
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    environment:
+      <<: *jwt
+      DATABASE_URL: postgres://postgres:postgres@postgres:5432/warmhouse_notifications
+      RABBITMQ_HOST: rabbitmq
+    ports:
+      - "8085:8080"
+    <<: *service-defaults
+
+  # ---------------------------------------------------------------------------
+  # Single entry point
+  # ---------------------------------------------------------------------------
+
+  gateway:
+    build:
+      context: .
+      dockerfile: src/Gateway/WarmHouse.Gateway/Dockerfile
+    container_name: warmhouse-gateway
+    depends_on:
+      - identity
+      - devices
+      - heating
+      - lighting
+      - gates
+      - monitoring
+      - telemetry
+      - scenarios
+      - notifications
+    ports:
+      - "8000:8080"
+    <<: *service-defaults
+
+volumes:
+  postgres_data:
+
+networks:
+  warmhouse:
+    driver: bridge

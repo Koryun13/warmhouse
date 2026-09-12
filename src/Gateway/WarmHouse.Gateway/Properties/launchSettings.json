@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json.schemastore.org/launchsettings.json",
+  "profiles": {
+    "http": {
+      "commandName": "Project",
+      "launchBrowser": false,
+      "applicationUrl": "http://localhost:8000",
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development",
+
+        "//": "appsettings.json points the clusters at container names. When the gateway runs from the IDE the services are on localhost instead, so each destination is overridden here.",
+
+        "ReverseProxy__Clusters__identity__Destinations__primary__Address": "http://localhost:8010/",
+        "ReverseProxy__Clusters__devices__Destinations__primary__Address": "http://localhost:8020/",
+        "ReverseProxy__Clusters__heating__Destinations__primary__Address": "http://localhost:8030/",
+        "ReverseProxy__Clusters__lighting__Destinations__primary__Address": "http://localhost:8040/",
+        "ReverseProxy__Clusters__gates__Destinations__primary__Address": "http://localhost:8050/",
+        "ReverseProxy__Clusters__monitoring__Destinations__primary__Address": "http://localhost:8060/",
+        "ReverseProxy__Clusters__telemetry__Destinations__primary__Address": "http://localhost:8070/",
+        "ReverseProxy__Clusters__scenarios__Destinations__primary__Address": "http://localhost:8075/",
+        "ReverseProxy__Clusters__notifications__Destinations__primary__Address": "http://localhost:8085/"
+      }
+    }
+  }
+}

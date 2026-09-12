@@ -1,0 +1,73 @@
+{
+  "openapi": "3.1.1",
+  "info": {
+    "title": "Temperature Sensor Simulator",
+    "version": "v1"
+  },
+  "servers": [
+    {
+      "url": "http://localhost:8081/"
+    }
+  ],
+  "paths": {
+    "/temperature": {
+      "get": {
+        "tags": [
+          "Temperature"
+        ],
+        "summary": "Current temperature for a room",
+        "operationId": "GetTemperatureByLocation",
+        "parameters": [
+          {
+            "name": "location",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "sensorId",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/temperature/{sensorId}": {
+      "get": {
+        "tags": [
+          "Temperature"
+        ],
+        "summary": "Current temperature for a sensor id",
+        "operationId": "GetTemperatureBySensorId",
+        "parameters": [
+          {
+            "name": "sensorId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    }
+  },
+  "tags": [
+    {
+      "name": "Temperature"
+    }
+  ]
+}

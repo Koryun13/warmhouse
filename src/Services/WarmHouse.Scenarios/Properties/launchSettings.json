@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json.schemastore.org/launchsettings.json",
+  "profiles": {
+    "http": {
+      "commandName": "Project",
+      "launchBrowser": false,
+      "applicationUrl": "http://localhost:8075",
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "DATABASE_URL": "postgres://postgres:postgres@localhost:5432/warmhouse_scenarios",
+        "RABBITMQ_HOST": "localhost"
+      }
+    }
+  }
+}

@@ -1,0 +1,179 @@
+{
+  "openapi": "3.1.1",
+  "info": {
+    "title": "Lighting Control",
+    "version": "v1"
+  },
+  "servers": [
+    {
+      "url": "http://localhost:8040/"
+    }
+  ],
+  "paths": {
+    "/api/v1/lighting/fixtures": {
+      "get": {
+        "tags": [
+          "Lighting"
+        ],
+        "summary": "Light fixtures of a house",
+        "operationId": "ListLightFixtures",
+        "parameters": [
+          {
+            "name": "houseId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/lighting/fixtures/{id}": {
+      "get": {
+        "tags": [
+          "Lighting"
+        ],
+        "summary": "State of a fixture",
+        "operationId": "GetLightFixture",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/lighting/fixtures/{id}/switch": {
+      "post": {
+        "tags": [
+          "Lighting"
+        ],
+        "summary": "Turn a light on or off",
+        "operationId": "SwitchLight",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SwitchLightRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/lighting/fixtures/{id}/brightness": {
+      "put": {
+        "tags": [
+          "Lighting"
+        ],
+        "summary": "Set brightness",
+        "operationId": "SetLightBrightness",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetBrightnessRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "SetBrightnessRequest": {
+        "required": [
+          "brightness",
+          "requested_by"
+        ],
+        "type": "object",
+        "properties": {
+          "brightness": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "requested_by": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      },
+      "SwitchLightRequest": {
+        "required": [
+          "on",
+          "requested_by"
+        ],
+        "type": "object",
+        "properties": {
+          "on": {
+            "type": "boolean"
+          },
+          "requested_by": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      }
+    }
+  },
+  "tags": [
+    {
+      "name": "Lighting"
+    }
+  ]
+}

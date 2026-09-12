@@ -1,0 +1,186 @@
+{
+  "openapi": "3.1.1",
+  "info": {
+    "title": "Heating Control",
+    "version": "v1"
+  },
+  "servers": [
+    {
+      "url": "http://localhost:8030/"
+    }
+  ],
+  "paths": {
+    "/api/v1/heating/zones": {
+      "get": {
+        "tags": [
+          "Heating"
+        ],
+        "summary": "Heating zones of a house",
+        "operationId": "ListHeatingZones",
+        "parameters": [
+          {
+            "name": "houseId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/heating/zones/{id}": {
+      "get": {
+        "tags": [
+          "Heating"
+        ],
+        "summary": "State of a heating zone",
+        "operationId": "GetHeatingZone",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/heating/zones/{id}/setpoint": {
+      "put": {
+        "tags": [
+          "Heating"
+        ],
+        "summary": "Set the target temperature",
+        "operationId": "SetHeatingSetpoint",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetSetpointRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/heating/zones/{id}/mode": {
+      "put": {
+        "tags": [
+          "Heating"
+        ],
+        "summary": "Switch the heating mode",
+        "operationId": "SetHeatingMode",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetModeRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "HeatingMode": {
+        "enum": [
+          "off",
+          "manual",
+          "auto"
+        ]
+      },
+      "SetModeRequest": {
+        "required": [
+          "mode",
+          "requested_by"
+        ],
+        "type": "object",
+        "properties": {
+          "mode": {
+            "$ref": "#/components/schemas/HeatingMode"
+          },
+          "requested_by": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      },
+      "SetSetpointRequest": {
+        "required": [
+          "target_temperature",
+          "requested_by"
+        ],
+        "type": "object",
+        "properties": {
+          "target_temperature": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "requested_by": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      }
+    }
+  },
+  "tags": [
+    {
+      "name": "Heating"
+    }
+  ]
+}

@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <ItemGroup>
+    <ProjectReference Include="../../Shared/WarmHouse.Shared/WarmHouse.Shared.csproj" />
+  </ItemGroup>
+
+  <!--
+    Container settings for the IDE tooling: the image is always a Linux one, and
+    the Dockerfile next to this project is built from the solution root so it can
+    reach Directory.Build.props and the shared projects.
+  -->
+  <PropertyGroup>
+    <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
+    <DockerfileContext>../../..</DockerfileContext>
+    <DockerfileFile>Dockerfile</DockerfileFile>
+  </PropertyGroup>
+
+</Project>

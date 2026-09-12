@@ -1,0 +1,27 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Cross-cutting code shared by every service, organised by layer in folders:
+      Kernel/         domain primitives (Entity, AggregateRoot, Result, Error)
+      Application/    outbound ports the use cases depend on
+      Infrastructure/ host defaults, PostgreSQL, RabbitMQ, presentation helpers
+  -->
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" />
+    <PackageReference Include="Scalar.AspNetCore" />
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" />
+    <PackageReference Include="MassTransit" />
+    <PackageReference Include="MassTransit.RabbitMQ" />
+    <PackageReference Include="MassTransit.EntityFrameworkCore" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../WarmHouse.Shared.Contracts/WarmHouse.Shared.Contracts.csproj" />
+  </ItemGroup>
+
+</Project>
